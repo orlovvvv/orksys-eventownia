@@ -1,0 +1,24 @@
+{
+  "name": "@orksys-eventownia/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@orksys-eventownia/db": "workspace:*",
+    "@orksys-eventownia/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@orksys-eventownia/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

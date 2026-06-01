@@ -1,0 +1,33 @@
+{
+  "name": "orksys-eventownia",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:web": "turbo -F web dev",
+    "dev:server": "turbo -F server dev",
+    "db:push": "turbo -F @orksys-eventownia/db db:push",
+    "db:generate": "turbo -F @orksys-eventownia/db db:generate",
+    "deploy": "turbo -F @orksys-eventownia/infra deploy",
+    "destroy": "turbo -F @orksys-eventownia/infra destroy"
+  },
+  "dependencies": {
+    "@orksys-eventownia/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@orksys-eventownia/config": "workspace:*",
+    "@types/node": "catalog:",
+    "turbo": "^2.8.12",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@10.30.3"
+}

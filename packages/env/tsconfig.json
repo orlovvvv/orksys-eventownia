@@ -1,0 +1,3 @@
+{
+  "extends": "@orksys-eventownia/config/tsconfig.base.json"
+}
