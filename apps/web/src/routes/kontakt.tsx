@@ -19,26 +19,30 @@ function ContactRoute() {
   const contact = useMutation(trpc.contact.submit.mutationOptions());
 
   return (
-    <main className="mx-auto grid w-full max-w-5xl gap-4 px-4 py-8 md:grid-cols-[1fr_1fr]">
+    <main className="mx-auto grid w-full max-w-page gap-8 px-4 py-10 md:grid-cols-[0.9fr_1.1fr] md:px-6 lg:py-16">
       <Card>
-        <CardHeader><CardTitle>Kontakt</CardTitle></CardHeader>
-        <CardContent className="flex flex-col gap-2 text-sm">
-          <div>{settings.data?.settings.businessName}</div>
+        <CardHeader>
+          <CardTitle className="text-3xl">Kontakt</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 text-base">
+          <div className="font-semibold">{settings.data?.settings.businessName}</div>
           <div>{settings.data?.settings.publicPhone}</div>
           <div>{settings.data?.settings.publicEmail}</div>
-          <p className="text-xs/relaxed text-muted-foreground">{settings.data?.settings.serviceAreaDescription}</p>
+          <p className="text-sm/relaxed text-muted-foreground">{settings.data?.settings.serviceAreaDescription}</p>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle>Formularz kontaktowy</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-3xl">Formularz kontaktowy</CardTitle>
+        </CardHeader>
         <CardContent>
           <FieldGroup>
-            <Field><FieldLabel>Imię</FieldLabel><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-            <Field><FieldLabel>E-mail</FieldLabel><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-            <Field><FieldLabel>Telefon</FieldLabel><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
-            <Field><FieldLabel>Wiadomość</FieldLabel><Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field>
+            <Field><FieldLabel htmlFor="contact-name">Imię</FieldLabel><Input id="contact-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+            <Field><FieldLabel htmlFor="contact-email">E-mail</FieldLabel><Input id="contact-email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+            <Field><FieldLabel htmlFor="contact-phone">Telefon</FieldLabel><Input id="contact-phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
+            <Field><FieldLabel htmlFor="contact-message">Wiadomość</FieldLabel><Textarea id="contact-message" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field>
             <Button onClick={() => contact.mutate({ ...form, turnstileToken: "mock-turnstile-token" })}>Wyślij</Button>
-            {contact.data ? <p className="text-xs text-muted-foreground">Zapisano kontakt: {contact.data.contactId}</p> : null}
+            {contact.data ? <p className="text-sm text-muted-foreground">Zapisano kontakt: {contact.data.contactId}</p> : null}
           </FieldGroup>
         </CardContent>
       </Card>
