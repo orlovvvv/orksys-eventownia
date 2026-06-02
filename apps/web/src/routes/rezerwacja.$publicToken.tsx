@@ -26,54 +26,54 @@ function PublicStatusRoute() {
   );
 
   if (!status.data) {
-    return <main className="mx-auto w-full max-w-4xl px-4 py-8">Nie znaleziono statusu dla tokenu.</main>;
+    return <main className="mx-auto w-full max-w-page px-4 py-10 md:px-6">Nie znaleziono statusu dla tokenu.</main>;
   }
 
   const data = status.data.data;
   const isBooking = status.data.type === "booking";
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-8">
+    <main className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-10 md:px-6">
       <Alert>
         <AlertTitle>Status publiczny</AlertTitle>
         <AlertDescription>Token jest niezgadywalny w makiecie i nie wymaga konta klienta.</AlertDescription>
       </Alert>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-3">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-3xl">
             {isBooking ? "Rezerwacja" : "Zapytanie"} <StatusBadge status={data.status} />
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 text-sm md:grid-cols-2">
+        <CardContent className="grid gap-5 text-base md:grid-cols-2">
           <div>
-            <div className="text-xs text-muted-foreground">Klient</div>
+            <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Klient</div>
             <div>{data.customer?.name}</div>
-            <div className="text-xs text-muted-foreground">{data.customer?.phone}</div>
+            <div className="text-sm text-muted-foreground">{data.customer?.phone}</div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground">Lokalizacja</div>
+            <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Lokalizacja</div>
             <div>{data.location?.city}, {data.location?.postalCode}</div>
-            <div className="text-xs text-muted-foreground">{data.location?.street}</div>
+            <div className="text-sm text-muted-foreground">{data.location?.street}</div>
           </div>
           {"eventStartAt" in data ? (
             <>
               <div>
-                <div className="text-xs text-muted-foreground">Start</div>
+                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Start</div>
                 <div>{formatDateTime(data.eventStartAt)}</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Razem</div>
+                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Razem</div>
                 <Money amountGrosz={data.totalGrosz} />
               </div>
             </>
           ) : (
             <>
               <div>
-                <div className="text-xs text-muted-foreground">Data</div>
+                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Data</div>
                 <div>{data.eventDate} {data.startTime}</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Szacunek</div>
+                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Szacunek</div>
                 <Money amountGrosz={data.totalEstimateGrosz} />
               </div>
             </>

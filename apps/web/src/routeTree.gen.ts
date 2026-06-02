@@ -29,6 +29,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProduktyIndexRouteImport } from './routes/produkty.index'
 import { Route as RezerwacjaPublicTokenRouteImport } from './routes/rezerwacja.$publicToken'
 import { Route as ProduktySlugRouteImport } from './routes/produkty.$slug'
 import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
@@ -149,6 +150,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProduktyIndexRoute = ProduktyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProduktyRoute,
+} as any)
 const RezerwacjaPublicTokenRoute = RezerwacjaPublicTokenRouteImport.update({
   id: '/rezerwacja/$publicToken',
   path: '/rezerwacja/$publicToken',
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/produkty/$slug': typeof ProduktySlugRoute
   '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/produkty/': typeof ProduktyIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
@@ -279,7 +286,6 @@ export interface FileRoutesByTo {
   '/maszyna-do-waty-cukrowej-wynajem': typeof MaszynaDoWatyCukrowejWynajemRoute
   '/namiot-imprezowy-wynajem': typeof NamiotImprezowyWynajemRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
-  '/produkty': typeof ProduktyRouteWithChildren
   '/regulamin': typeof RegulaminRoute
   '/todos': typeof TodosRoute
   '/wynajem': typeof WynajemRoute
@@ -295,6 +301,7 @@ export interface FileRoutesByTo {
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/produkty/$slug': typeof ProduktySlugRoute
   '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/produkty': typeof ProduktyIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
@@ -333,6 +340,7 @@ export interface FileRoutesById {
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/produkty/$slug': typeof ProduktySlugRoute
   '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/produkty/': typeof ProduktyIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
@@ -372,6 +380,7 @@ export interface FileRouteTypes {
     | '/kategorie/$slug'
     | '/produkty/$slug'
     | '/rezerwacja/$publicToken'
+    | '/produkty/'
     | '/admin/bookings/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
@@ -393,7 +402,6 @@ export interface FileRouteTypes {
     | '/maszyna-do-waty-cukrowej-wynajem'
     | '/namiot-imprezowy-wynajem'
     | '/polityka-prywatnosci'
-    | '/produkty'
     | '/regulamin'
     | '/todos'
     | '/wynajem'
@@ -409,6 +417,7 @@ export interface FileRouteTypes {
     | '/kategorie/$slug'
     | '/produkty/$slug'
     | '/rezerwacja/$publicToken'
+    | '/produkty'
     | '/admin/bookings/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
@@ -446,6 +455,7 @@ export interface FileRouteTypes {
     | '/kategorie/$slug'
     | '/produkty/$slug'
     | '/rezerwacja/$publicToken'
+    | '/produkty/'
     | '/admin/bookings/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
@@ -617,6 +627,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/produkty/': {
+      id: '/produkty/'
+      path: '/'
+      fullPath: '/produkty/'
+      preLoaderRoute: typeof ProduktyIndexRouteImport
+      parentRoute: typeof ProduktyRoute
     }
     '/rezerwacja/$publicToken': {
       id: '/rezerwacja/$publicToken'
@@ -790,10 +807,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ProduktyRouteChildren {
   ProduktySlugRoute: typeof ProduktySlugRoute
+  ProduktyIndexRoute: typeof ProduktyIndexRoute
 }
 
 const ProduktyRouteChildren: ProduktyRouteChildren = {
   ProduktySlugRoute: ProduktySlugRoute,
+  ProduktyIndexRoute: ProduktyIndexRoute,
 }
 
 const ProduktyRouteWithChildren = ProduktyRoute._addFileChildren(

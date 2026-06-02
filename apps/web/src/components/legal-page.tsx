@@ -7,12 +7,12 @@ export function LegalPage({ type }: { type: "terms" | "privacy" | "cookies" }) {
   const settings = useQuery(trpc.admin.settings.get.queryOptions());
   const doc = settings.data?.legalDocuments.find((item) => item.type === type && item.active);
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8">
+    <main className="mx-auto w-full max-w-page px-4 py-10 md:px-6">
       <Card>
         <CardHeader>
-          <CardTitle>{doc?.title ?? "Dokument prawny"}</CardTitle>
+          <CardTitle className="text-3xl md:text-4xl">{doc?.title ?? "Dokument prawny"}</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm/relaxed text-muted-foreground">
+        <CardContent className="max-w-3xl text-base/relaxed text-muted-foreground">
           {doc?.bodyMd}
           <p className="mt-4">To roboczy dokument makietowy. Przed produkcją wymaga przeglądu prawnego.</p>
         </CardContent>
