@@ -60,18 +60,16 @@ export const rentalRequestsRouter = router({
 
       const state = getState();
       const now = nowIso();
-      const quote =
-        (input.quoteId ? state.quotes.find((item) => item.id === input.quoteId) : null) ??
-        calculateQuote({
-          event: {
-            date: input.event.date,
-            startTime: input.event.startTime,
-            durationHours: input.event.durationHours,
-            postalCode: input.event.location.postalCode,
-            city: input.event.location.city,
-          },
-          items: input.items,
-        });
+      const quote = calculateQuote({
+        event: {
+          date: input.event.date,
+          startTime: input.event.startTime,
+          durationHours: input.event.durationHours,
+          postalCode: input.event.location.postalCode,
+          city: input.event.location.city,
+        },
+        items: input.items,
+      });
 
       const customer = {
         id: makeId("cust"),

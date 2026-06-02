@@ -12,7 +12,9 @@ export function confirmRentalRequest(
   },
 ) {
   const state = getState();
-  const request = state.rentalRequests.find((item) => item.id === rentalRequestId);
+  const request = state.rentalRequests.find(
+    (item) => item.id === rentalRequestId && item.status === "pending_admin_review",
+  );
   if (!request) return null;
   const requestItems = state.rentalRequestItems.filter((item) => item.rentalRequestId === request.id);
   const products = requestItems

@@ -54,7 +54,9 @@ export const catalogRouter = router({
 
   productBySlug: publicProcedure.input(z.object({ slug: z.string() })).query(({ input }) => {
     const state = getState();
-    const product = state.products.find((item) => item.slug === input.slug);
+    const product = state.products.find(
+      (item) => item.slug === input.slug && item.publicVisible && item.active,
+    );
     if (product) recordAnalytics("product_viewed", "product", product.id);
     return product ? publicProduct(product.id) : null;
   }),
