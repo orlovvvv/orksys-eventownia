@@ -12,6 +12,7 @@ import { AddToOrderButton } from "@/components/add-to-order-button";
 import { Money } from "@/components/money";
 import { useOrderCart } from "@/components/order-cart-provider";
 import { todayPlus } from "@/lib/format";
+import { getCartMaxQuantity } from "@/lib/order-cart";
 import {
   getProductFallbackGradient,
   getProductGallery,
@@ -39,6 +40,8 @@ function ProductDetailRoute() {
   }
 
   const productData = product.data;
+  const maxQuantity = getCartMaxQuantity(productData.inventoryCount);
+  const unavailable = maxQuantity <= 0;
   const gallery = getProductGallery(productData);
   const selectedImage = gallery[selectedImageIndex] ?? gallery[0];
   const specs = getProductSpecs(productData);
@@ -124,13 +127,19 @@ function ProductDetailRoute() {
                   onValueChange={setRentalDate}
                 />
               </Field>
-              <Button
-                render={<Link to="/wynajem" search={{ date: rentalDate }} />}
-                onClick={() => addItem(productData.sku, 1, { maxQuantity: productData.inventoryCount })}
-              >
-                Sprawdź dostępność
-                <ArrowRight data-icon="inline-end" />
-              </Button>
+              {unavailable ? (
+                <Button disabled type="button">
+                  Chwilowo niedostępne
+                </Button>
+              ) : (
+                <Button
+                  render={<Link to="/wynajem" search={{ date: rentalDate }} />}
+                  onClick={() => addItem(productData.sku, 1, { maxQuantity })}
+                >
+                  Sprawdź dostępność
+                  <ArrowRight data-icon="inline-end" />
+                </Button>
+              )}
               <p className="text-center text-sm text-muted-foreground">Nie pobieramy opłaty z góry.</p>
             </CardContent>
           </Card>

@@ -48,7 +48,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps,
 import { toast } from "sonner";
 
 import { useOrderCart } from "@/components/order-cart-provider";
-import { clampCartQuantity, MAX_CART_QUANTITY } from "@/lib/order-cart";
+import { clampCartQuantity, getCartMaxQuantity, MAX_CART_QUANTITY } from "@/lib/order-cart";
 import { formatMoney, todayPlus } from "@/lib/format";
 import { getProductFallbackGradient, getProductImage } from "@/lib/mock-images";
 import { trpc } from "@/utils/trpc";
@@ -88,6 +88,8 @@ type QuoteResult = {
   totalEstimateGrosz: number | null;
 };
 
+type QuoteCalculationSource = "auto" | "manual";
+
 const steps: { id: Step; label: string }[] = [
   { id: "koszyk", label: "Koszyk" },
   { id: "wydarzenie", label: "Wydarzenie" },
@@ -107,8 +109,16 @@ function isStep(value: unknown): value is Step {
 }
 
 function getMaxQuantity(product: CatalogProduct | null) {
-  if (!product?.inventoryCount) return MAX_CART_QUANTITY;
-  return Math.max(1, Math.min(product.inventoryCount, MAX_CART_QUANTITY));
+  if (!product) return MAX_CART_QUANTITY;
+  return getCartMaxQuantity(product.inventoryCount);
+}
+
+function isUnavailableRow(row: CartRow) {
+  return row.product === null || getMaxQuantity(row.product) <= 0;
+}
+
+function isAvailableRow(row: CartRow): row is CartRow & { product: CatalogProduct } {
+  return row.product !== null && getMaxQuantity(row.product) > 0;
 }
 
 function getBaseLineAmount(product: CatalogProduct | null, quantity: number) {
@@ -137,6 +147,7 @@ export function QuoteBuilder() {
   const handledSearchProductRef = useRef<string | null>(null);
   const [step, setStep] = useState<Step>(isStep(search.step) ? search.step : "koszyk");
   const [calculatedQuoteKey, setCalculatedQuoteKey] = useState<string | null>(null);
+  const [autoQuoteAttemptKey, setAutoQuoteAttemptKey] = useState<string | null>(null);
   const [event, setEvent] = useState({
     date: search.date ?? todayPlus(14),
     startTime: "12:00",
@@ -158,10 +169,27 @@ export function QuoteBuilder() {
     marketingAccepted: false,
   });
 
-  useEffect(() => {
-    if (!search.product || handledSearchProductRef.current === search.product) return;
+  const catalogProducts = useMemo(
+    () =>
+      products.data?.items.filter((product): product is CatalogProduct => Boolean(product)) ?? [],
+    [products.data?.items],
+  );
+  const productBySku = useMemo(() => new Map(catalogProducts.map((product) => [product.sku, product])), [catalogProducts]);
 
-    addItem(search.product);
+  useEffect(() => {
+    if (!search.product || handledSearchProductRef.current === search.product || products.isPending) return;
+
+    const product = productBySku.get(search.product);
+    const maxQuantity = getMaxQuantity(product ?? null);
+
+    if (product && maxQuantity > 0) {
+      addItem(search.product, 1, { maxQuantity });
+    } else {
+      toast.warning("Nie dodano produktu", {
+        description: "Produkt jest niedostępny lub nie istnieje.",
+      });
+    }
+
     handledSearchProductRef.current = search.product;
     if (search.date) {
       setEvent((current) => ({ ...current, date: search.date ?? current.date }));
@@ -175,14 +203,8 @@ export function QuoteBuilder() {
       },
       replace: true,
     });
-  }, [addItem, navigate, search.date, search.product, search.step]);
+  }, [addItem, navigate, productBySku, products.isPending, search.date, search.product, search.step]);
 
-  const catalogProducts = useMemo(
-    () =>
-      products.data?.items.filter((product): product is CatalogProduct => Boolean(product)) ?? [],
-    [products.data?.items],
-  );
-  const productBySku = useMemo(() => new Map(catalogProducts.map((product) => [product.sku, product])), [catalogProducts]);
   const rows = useMemo<CartRow[]>(
     () => items.map((item) => ({ ...item, product: productBySku.get(item.sku) ?? null })),
     [items, productBySku],
@@ -190,7 +212,7 @@ export function QuoteBuilder() {
   const quoteItems = useMemo(
     () =>
       rows
-        .filter((row): row is CartRow & { product: CatalogProduct } => row.product !== null)
+        .filter(isAvailableRow)
         .map((row) => ({
           sku: row.product.sku,
           quantity: clampCartQuantity(row.quantity, getMaxQuantity(row.product)),
@@ -198,9 +220,12 @@ export function QuoteBuilder() {
     [rows],
   );
 
-  const hasUnavailableRows = rows.some((row) => row.product === null);
-  const hasManualItems = rows.some((row) => row.product?.pricing?.quoteMode !== "automatic");
-  const baseValueGrosz = rows.reduce((sum, row) => sum + (getBaseLineAmount(row.product, row.quantity) ?? 0), 0);
+  const hasUnavailableRows = rows.some(isUnavailableRow);
+  const hasManualItems = rows.some((row) => isAvailableRow(row) && row.product.pricing?.quoteMode !== "automatic");
+  const baseValueGrosz = rows.reduce(
+    (sum, row) => sum + (isUnavailableRow(row) ? 0 : getBaseLineAmount(row.product, row.quantity) ?? 0),
+    0,
+  );
   const cartHasItems = itemCount > 0;
   const canUseCart = quoteItems.length > 0 && !hasUnavailableRows;
   const canUseEvent =
@@ -226,6 +251,7 @@ export function QuoteBuilder() {
     event.postalCode,
     quoteItemKey(quoteItems),
   ].join("::");
+  const previousQuoteKeyRef = useRef(quoteKey);
 
   const quoteMutation = useMutation(trpc.quotes.calculate.mutationOptions());
   const submitMutation = useMutation(
@@ -239,13 +265,21 @@ export function QuoteBuilder() {
   const quote: QuoteResult | null = calculatedQuoteKey === quoteKey ? (quoteMutation.data ?? null) : null;
 
   useEffect(() => {
-    if (calculatedQuoteKey && calculatedQuoteKey !== quoteKey) {
-      setCalculatedQuoteKey(null);
-    }
-  }, [calculatedQuoteKey, quoteKey]);
+    if (previousQuoteKeyRef.current === quoteKey) return;
+    previousQuoteKeyRef.current = quoteKey;
+    setCalculatedQuoteKey(null);
+    quoteMutation.reset();
+  }, [quoteKey]);
 
-  const calculateQuote = useCallback(() => {
+  const calculateQuote = useCallback(({ source }: { source: QuoteCalculationSource }) => {
     if (!canUseEvent || quoteItems.length === 0) return;
+    if (source === "auto" && autoQuoteAttemptKey === quoteKey) return;
+
+    if (source === "auto") {
+      setAutoQuoteAttemptKey(quoteKey);
+    }
+
+    quoteMutation.reset();
 
     quoteMutation.mutate(
       {
@@ -262,13 +296,19 @@ export function QuoteBuilder() {
         onSuccess: () => setCalculatedQuoteKey(quoteKey),
       },
     );
-  }, [canUseEvent, event.city, event.date, event.durationHours, event.postalCode, event.startTime, quoteItems, quoteKey, quoteMutation]);
+  }, [autoQuoteAttemptKey, canUseEvent, event.city, event.date, event.durationHours, event.postalCode, event.startTime, quoteItems, quoteKey, quoteMutation]);
 
   useEffect(() => {
-    if (step === "podsumowanie" && canUseContact && !quote && !quoteMutation.isPending) {
-      calculateQuote();
+    if (
+      step === "podsumowanie" &&
+      canUseContact &&
+      !quote &&
+      !quoteMutation.isPending &&
+      autoQuoteAttemptKey !== quoteKey
+    ) {
+      calculateQuote({ source: "auto" });
     }
-  }, [calculateQuote, canUseContact, quote, quoteMutation.isPending, step]);
+  }, [autoQuoteAttemptKey, calculateQuote, canUseContact, quote, quoteKey, quoteMutation.isPending, step]);
 
   const goToStep = (nextStep: Step) => {
     setStep(nextStep);
@@ -366,7 +406,7 @@ export function QuoteBuilder() {
               quotePending={quoteMutation.isPending}
               quoteError={quoteMutation.error?.message}
               recalculatingDisabled={!canUseEvent || quoteMutation.isPending}
-              recalculate={calculateQuote}
+              recalculate={() => calculateQuote({ source: "manual" })}
             />
           ) : null}
         </div>
@@ -382,7 +422,7 @@ export function QuoteBuilder() {
           quote={quote}
           submitRequest={submitRequest}
           goNext={goNext}
-          recalculate={calculateQuote}
+          recalculate={() => calculateQuote({ source: "manual" })}
         />
       </div>
     </div>
@@ -450,7 +490,7 @@ function CartStep({
     <div className="flex flex-col gap-6">
       {rows.map((row) => {
         const product = row.product;
-        return product ? (
+        return product && !isUnavailableRow(row) ? (
           <AvailableCartItem
             key={row.sku}
             row={{ ...row, product }}
@@ -564,6 +604,16 @@ function UnavailableCartItem({
   removeItem: (sku: string) => void;
   row: CartRow;
 }) {
+  const productName = row.product?.namePl ?? row.sku;
+  const title = row.product
+    ? row.product.namePl
+    : productsPending
+      ? "Sprawdzanie produktu"
+      : "Produkt niedostępny";
+  const description = row.product
+    ? "Ten produkt jest obecnie niedostępny. Usuń tę pozycję, aby kontynuować."
+    : "Usuń tę pozycję, aby kontynuować wycenę.";
+
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -573,16 +623,16 @@ function UnavailableCartItem({
           </div>
           <div className="flex flex-col gap-1">
             <h2 className="text-lg font-semibold">
-              {productsPending ? "Sprawdzanie produktu" : "Produkt niedostępny"}
+              {title}
             </h2>
-            <p className="text-sm text-muted-foreground">{row.sku}</p>
+            <p className="text-sm text-muted-foreground">{row.product?.sku ?? row.sku}</p>
             <p className="text-sm/relaxed text-muted-foreground">
-              Usuń tę pozycję, aby kontynuować wycenę.
+              {description}
             </p>
           </div>
         </div>
         <RemoveCartItemButton
-          productName={row.sku}
+          productName={productName}
           removeItem={removeItem}
           sku={row.sku}
           triggerLabel="Usuń"

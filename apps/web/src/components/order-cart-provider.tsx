@@ -16,7 +16,7 @@ export type AddOrderCartItemResult = {
   previousQuantity: number;
   quantity: number;
   sku: string;
-  status: "added" | "invalid" | "max-reached";
+  status: "added" | "invalid" | "max-reached" | "unavailable";
 };
 
 type AddOrderCartItemOptions = {
@@ -65,9 +65,21 @@ export function OrderCartProvider({ children }: { children: ReactNode }) {
     }
 
     const current = itemsRef.current;
-    const requestedQuantity = clampCartQuantity(quantity, maxQuantity);
     const existing = current.find((item) => item.sku === normalizedSku);
     const previousQuantity = existing?.quantity ?? 0;
+
+    if (maxQuantity <= 0) {
+      return {
+        addedQuantity: 0,
+        maxQuantity,
+        previousQuantity,
+        quantity: previousQuantity,
+        sku: normalizedSku,
+        status: "unavailable",
+      };
+    }
+
+    const requestedQuantity = clampCartQuantity(quantity, maxQuantity);
     const nextQuantity = Math.min(previousQuantity + requestedQuantity, maxQuantity);
     const addedQuantity = Math.max(0, nextQuantity - previousQuantity);
     const status: AddOrderCartItemResult["status"] = addedQuantity > 0 ? "added" : "max-reached";

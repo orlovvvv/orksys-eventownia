@@ -48,14 +48,16 @@ export function AddToOrderButton({
   const resetTimerRef = useRef<number | null>(null);
   const currentQuantity = items.find((item) => item.sku === product.sku)?.quantity ?? 0;
   const maxQuantity = getCartMaxQuantity(product.inventoryCount);
-  const maxReached = currentQuantity >= maxQuantity;
+  const unavailable = maxQuantity <= 0;
+  const maxReached = !unavailable && currentQuantity >= maxQuantity;
 
   const buttonLabel = useMemo(() => {
+    if (unavailable) return "Niedostępne";
     if (feedback === "added") return "Dodano";
     if (maxReached || feedback === "max-reached") return "Limit w koszyku";
     if (currentQuantity > 0) return "Dodaj kolejny";
     return label;
-  }, [currentQuantity, feedback, label, maxReached]);
+  }, [currentQuantity, feedback, label, maxReached, unavailable]);
 
   useEffect(() => {
     return () => {
@@ -107,12 +109,21 @@ export function AddToOrderButton({
         },
       });
     }
+
+    if (result.status === "unavailable") {
+      setAnnouncement(`${product.namePl} jest obecnie niedostępny.`);
+      toast.warning("Produkt niedostępny", {
+        description: product.namePl,
+      });
+    }
   }
 
   const Icon = feedback === "added" ? Check : Plus;
   const quantityStatus = currentQuantity > 0 ? formatCartQuantity(currentQuantity) : "";
   const accessibleLabel =
-    feedback === "added"
+    unavailable
+      ? `${product.namePl} jest obecnie niedostępny`
+      : feedback === "added"
       ? `Dodano ${product.namePl} do zamówienia. ${quantityStatus}`
       : maxReached
         ? `Limit w koszyku dla ${product.namePl}. ${quantityStatus}`
@@ -128,7 +139,7 @@ export function AddToOrderButton({
       <Button
         aria-label={accessibleLabel}
         className={buttonClassName}
-        disabled={maxReached}
+        disabled={unavailable || maxReached}
         size={size}
         type="button"
         variant={variant}
