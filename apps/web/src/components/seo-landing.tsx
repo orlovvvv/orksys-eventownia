@@ -33,9 +33,9 @@ export function SeoLanding({ path }: { path: string }) {
         </div>
       </section>
       <Alert>
-        <AlertTitle>Oferta z ręcznym potwierdzeniem</AlertTitle>
+        <AlertTitle>Oferta z potwierdzeniem obsługi</AlertTitle>
         <AlertDescription>
-          Dostępność, dojazd i warunki montażu są potwierdzane przed finalną rezerwacją.
+          Dostępność, dojazd i warunki montażu potwierdzimy przed finalną rezerwacją.
         </AlertDescription>
       </Alert>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

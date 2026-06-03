@@ -1,16 +1,33 @@
+import { Badge } from "@orksys-eventownia/ui/components/badge";
 import { Button } from "@orksys-eventownia/ui/components/button";
+import { cn } from "@orksys-eventownia/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { CalendarCheck, Grid2X2, Settings } from "lucide-react";
+import { Grid2X2, Settings, ShoppingCart } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { ModeToggle } from "./mode-toggle";
+import { useOrderCart } from "./order-cart-provider";
 
 export default function SiteHeader() {
+  const { itemCount } = useOrderCart();
+  const previousItemCountRef = useRef(itemCount);
+  const [cartBadgePulsing, setCartBadgePulsing] = useState(false);
   const links = [
     { to: "/produkty", label: "Produkty" },
     { to: "/wynajem", label: "Wynajem" },
     { to: "/faq", label: "FAQ" },
     { to: "/kontakt", label: "Kontakt" },
   ] as const;
+
+  useEffect(() => {
+    if (itemCount > previousItemCountRef.current) {
+      setCartBadgePulsing(true);
+      const timeoutId = window.setTimeout(() => setCartBadgePulsing(false), 650);
+      previousItemCountRef.current = itemCount;
+      return () => window.clearTimeout(timeoutId);
+    }
+    previousItemCountRef.current = itemCount;
+  }, [itemCount]);
 
   return (
     <header className="sticky top-0 z-50 bg-background/85 shadow-sm backdrop-blur-xl">
@@ -22,7 +39,9 @@ export default function SiteHeader() {
           </Link>
           <div className="flex items-center gap-2 md:hidden">
             <Button variant="outline" size="sm" render={<Link to="/wynajem" search={{}} />}>
-              Zapytaj
+              <ShoppingCart data-icon="inline-start" />
+              Koszyk
+              <CartCountBadge itemCount={itemCount} pulsing={cartBadgePulsing} />
             </Button>
             <ModeToggle />
           </div>
@@ -44,12 +63,31 @@ export default function SiteHeader() {
             Admin
           </Button>
           <Button render={<Link to="/wynajem" search={{}} />}>
-            <CalendarCheck data-icon="inline-start" />
-            Zapytaj o termin
+            <ShoppingCart data-icon="inline-start" />
+            Koszyk
+            <CartCountBadge itemCount={itemCount} pulsing={cartBadgePulsing} />
           </Button>
           <ModeToggle />
         </div>
       </div>
     </header>
+  );
+}
+
+function CartCountBadge({ itemCount, pulsing }: { itemCount: number; pulsing: boolean }) {
+  if (itemCount <= 0) return null;
+
+  return (
+    <Badge
+      variant="secondary"
+      className={cn(
+        "origin-center transition-[transform,box-shadow] duration-300 motion-reduce:scale-100 motion-reduce:ring-0",
+        pulsing ? "scale-125 ring-2 ring-primary/30" : "scale-100",
+      )}
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {itemCount}
+    </Badge>
   );
 }

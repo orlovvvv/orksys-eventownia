@@ -5,17 +5,19 @@ import { DatePicker } from "@orksys-eventownia/ui/components/date-picker";
 import { Field, FieldLabel } from "@orksys-eventownia/ui/components/field";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Calendar, CheckCircle2, ChevronRight, Plug, Plus, Ruler, Users } from "lucide-react";
+import { ArrowRight, Calendar, CheckCircle2, ChevronRight, Plug, Ruler, Users } from "lucide-react";
 import { useState } from "react";
 
+import { AddToOrderButton } from "@/components/add-to-order-button";
 import { Money } from "@/components/money";
+import { useOrderCart } from "@/components/order-cart-provider";
 import { todayPlus } from "@/lib/format";
+import { getCartMaxQuantity } from "@/lib/order-cart";
 import {
   getProductFallbackGradient,
   getProductGallery,
   getProductHighlights,
   getProductSpecs,
-  recommendedAddons,
 } from "@/lib/mock-images";
 import { trpc } from "@/utils/trpc";
 
@@ -28,6 +30,8 @@ const specIcons = [Ruler, Plug, Users, Calendar] as const;
 function ProductDetailRoute() {
   const { slug } = Route.useParams();
   const product = useQuery(trpc.catalog.productBySlug.queryOptions({ slug }));
+  const products = useQuery(trpc.catalog.products.queryOptions({ limit: 100 }));
+  const { addItem } = useOrderCart();
   const [rentalDate, setRentalDate] = useState(todayPlus(14));
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -35,15 +39,22 @@ function ProductDetailRoute() {
     return <main className="mx-auto w-full max-w-page px-4 py-10 md:px-6">Produkt nie znaleziony.</main>;
   }
 
-  const gallery = getProductGallery(product.data);
+  const productData = product.data;
+  const maxQuantity = getCartMaxQuantity(productData.inventoryCount);
+  const unavailable = maxQuantity <= 0;
+  const gallery = getProductGallery(productData);
   const selectedImage = gallery[selectedImageIndex] ?? gallery[0];
-  const specs = getProductSpecs(product.data);
-  const highlights = getProductHighlights(product.data);
+  const specs = getProductSpecs(productData);
+  const highlights = getProductHighlights(productData);
+  const addonProducts =
+    (products.data?.items ?? [])
+      .flatMap((item) => (!item || item.productType === "rental_product" ? [] : [item]))
+      .slice(0, 3);
   const price =
-    product.data.pricing?.quoteMode === "automatic" ? (
-      <Money amountGrosz={product.data.pricing.basePriceGrosz} />
+    productData.pricing?.quoteMode === "automatic" ? (
+      <Money amountGrosz={productData.pricing.basePriceGrosz} />
     ) : (
-      "Cena do ustalenia"
+      "Wycena indywidualna"
     );
 
   return (
@@ -57,14 +68,14 @@ function ProductDetailRoute() {
           Katalog
         </Link>
         <ChevronRight />
-        <span className="font-semibold text-foreground">{product.data.category?.namePl}</span>
+        <span className="font-semibold text-foreground">{productData.category?.namePl}</span>
       </nav>
 
       <section className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-7">
           <div
             className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-surface-container-high shadow-soft"
-            style={{ background: getProductFallbackGradient(product.data) }}
+            style={{ background: getProductFallbackGradient(productData) }}
           >
             <img src={selectedImage.src} alt={selectedImage.alt} className="size-full object-cover" />
             <Badge variant="outline" className="absolute left-4 top-4 bg-card/90">
@@ -94,12 +105,12 @@ function ProductDetailRoute() {
 
         <div className="flex flex-col gap-7 lg:col-span-5">
           <div className="flex flex-col gap-4">
-            <h1 className="text-4xl font-bold leading-tight md:text-5xl">{product.data.namePl}</h1>
+            <h1 className="text-4xl font-bold leading-tight md:text-5xl">{productData.namePl}</h1>
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-bold text-primary">{price}</span>
-              {product.data.pricing?.baseHours ? <span className="text-sm text-muted-foreground">/ {product.data.pricing.baseHours}h</span> : null}
+              {productData.pricing?.baseHours ? <span className="text-sm text-muted-foreground">/ {productData.pricing.baseHours}h</span> : null}
             </div>
-            <p className="text-base/relaxed text-muted-foreground">{product.data.longDescriptionPl}</p>
+            <p className="text-base/relaxed text-muted-foreground">{productData.longDescriptionPl}</p>
           </div>
 
           <Card>
@@ -116,10 +127,19 @@ function ProductDetailRoute() {
                   onValueChange={setRentalDate}
                 />
               </Field>
-              <Button render={<Link to="/wynajem" search={{ product: product.data.sku, date: rentalDate }} />}>
-                Sprawdź dostępność
-                <ArrowRight data-icon="inline-end" />
-              </Button>
+              {unavailable ? (
+                <Button disabled type="button">
+                  Chwilowo niedostępne
+                </Button>
+              ) : (
+                <Button
+                  render={<Link to="/wynajem" search={{ date: rentalDate }} />}
+                  onClick={() => addItem(productData.sku, 1, { maxQuantity })}
+                >
+                  Sprawdź dostępność
+                  <ArrowRight data-icon="inline-end" />
+                </Button>
+              )}
               <p className="text-center text-sm text-muted-foreground">Nie pobieramy opłaty z góry.</p>
             </CardContent>
           </Card>
@@ -163,22 +183,25 @@ function ProductDetailRoute() {
       <section className="flex flex-col gap-6">
         <h2 className="text-3xl font-bold">Polecane dodatki</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {recommendedAddons.map((addon) => (
-            <Card key={addon.name} size="sm">
-              <CardContent className="flex items-center gap-4 pt-1">
-                <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-container-low text-muted-foreground">
-                  {addon.image ? <img src={addon.image.src} alt={addon.image.alt} className="size-full object-cover" /> : <Plug />}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold">{addon.name}</div>
-                  <div className="text-sm text-muted-foreground">{addon.price}</div>
-                </div>
-                <Button size="icon" variant="outline" aria-label={`Dodaj ${addon.name}`}>
-                  <Plus data-icon="inline-start" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+          {addonProducts.map((addon) => {
+            const image = getProductGallery(addon)[0];
+            return (
+              <Card key={addon.sku} size="sm">
+                <CardContent className="flex items-center gap-4 pt-1">
+                  <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-container-low text-muted-foreground">
+                    {image ? <img src={image.src} alt={image.alt} className="size-full object-cover" /> : <Plug />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-semibold">{addon.namePl}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {addon.pricing?.quoteMode === "automatic" ? <Money amountGrosz={addon.pricing.basePriceGrosz} /> : "Wycena indywidualna"}
+                    </div>
+                  </div>
+                  <AddToOrderButton iconOnly product={addon} />
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </section>
     </main>

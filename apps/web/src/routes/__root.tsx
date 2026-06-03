@@ -6,6 +6,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
+import { OrderCartProvider } from "@/components/order-cart-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { trpc } from "@/utils/trpc";
 
@@ -55,12 +56,14 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="vite-ui-theme"
       >
-        <div className="grid min-h-svh grid-rows-[auto_1fr_auto]">
-          <SiteHeader />
-          <Outlet />
-          {showFooter ? <SiteFooter /> : null}
-        </div>
-        <Toaster richColors />
+        <OrderCartProvider>
+          <div className="grid min-h-svh grid-rows-[auto_1fr_auto]">
+            <SiteHeader />
+            <Outlet />
+            {showFooter ? <SiteFooter /> : null}
+          </div>
+          <Toaster richColors />
+        </OrderCartProvider>
       </ThemeProvider>
       {showDevtools ? (
         <>

@@ -7,7 +7,7 @@ export default function SiteFooter() {
         <div className="flex flex-col gap-3">
           <div className="text-sm font-bold text-foreground">Eventownia</div>
           <p className="max-w-xs text-sm/relaxed text-muted-foreground">
-            Wynajem atrakcji eventowych z ręcznym potwierdzeniem dostępności.
+            Wynajem atrakcji eventowych z potwierdzeniem dostępności przez obsługę.
           </p>
           <p className="text-sm text-muted-foreground">© 2026 Eventownia. Wszystkie prawa zastrzeżone.</p>
         </div>

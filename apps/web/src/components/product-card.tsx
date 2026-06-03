@@ -1,25 +1,25 @@
-import { Button } from "@orksys-eventownia/ui/components/button";
 import { Badge } from "@orksys-eventownia/ui/components/badge";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@orksys-eventownia/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Plus } from "lucide-react";
+import * as React from "react";
 
+import { AddToOrderButton } from "@/components/add-to-order-button";
 import { getProductFallbackGradient, getProductImage } from "@/lib/mock-images";
 import { Money } from "./money";
 
-type ProductCardProduct = {
+export type ProductCardProduct = {
   id?: string;
   slug: string;
   sku: string;
   namePl: string;
   shortDescriptionPl: string;
+  inventoryCount?: number;
   visualTone: string;
   category?: { slug: string; namePl: string } | null;
   assets?: { publicUrl: string | null; altTextPl: string; isPrimary: boolean }[] | null;
@@ -31,11 +31,47 @@ type ProductCardProduct = {
   } | null;
 };
 
+export type ProductCardViewProps = {
+  addControl: React.ReactNode;
+  detailsLink: React.ReactElement<{ className?: string }>;
+  product: ProductCardProduct;
+};
+
 export function ProductCard({ product }: { product: ProductCardProduct }) {
+  return (
+    <ProductCardView
+      product={product}
+      addControl={
+        <AddToOrderButton
+          buttonClassName="w-full"
+          containerClassName="relative z-20 w-full sm:w-auto md:w-full 2xl:w-auto"
+          product={product}
+          showQuantityStatus
+        />
+      }
+      detailsLink={
+        <Link
+          to="/produkty/$slug"
+          params={{ slug: product.slug }}
+          aria-label={`Zobacz szczegóły: ${product.namePl}`}
+        />
+      }
+    />
+  );
+}
+
+export function ProductCardView({
+  addControl,
+  detailsLink,
+  product,
+}: ProductCardViewProps) {
   const image = getProductImage(product);
 
   return (
-    <Card className="group min-h-full pt-0">
+    <Card className="group relative min-h-full pt-0">
+      {React.cloneElement(detailsLink, {
+        className: "absolute inset-0 z-10 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+      })}
       <div className="relative h-52 overflow-hidden bg-muted" style={{ background: getProductFallbackGradient(product) }}>
         <img
           src={image.src}
@@ -53,33 +89,20 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4">
         <p className="line-clamp-2 text-sm/relaxed text-muted-foreground">{product.shortDescriptionPl}</p>
-        <div className="mt-auto flex items-end justify-between gap-4 border-t border-border/50 pt-4">
+        <div className="mt-auto flex flex-col gap-4 border-t border-border/50 pt-4 sm:flex-row sm:items-end sm:justify-between md:flex-col md:items-stretch 2xl:flex-row 2xl:items-end">
           <div className="flex flex-col gap-1">
             <span className="text-sm text-muted-foreground">od</span>
             <span className="text-2xl font-bold text-primary">
               {product.pricing?.quoteMode === "automatic" ? (
                 <Money amountGrosz={product.pricing.basePriceGrosz} />
               ) : (
-                "Cena do ustalenia"
+                "Wycena indywidualna"
               )}
             </span>
           </div>
-          <Button
-            size="icon"
-            variant="outline"
-            render={<Link to="/wynajem" search={{ product: product.sku }} aria-label={`Zapytaj o ${product.namePl}`} />}
-          >
-            <Plus data-icon="inline-start" />
-          </Button>
+          {addControl}
         </div>
       </CardContent>
-      <CardFooter className="justify-between gap-3">
-        <Button variant="outline" render={<Link to="/produkty/$slug" params={{ slug: product.slug }} />}>
-          Szczegóły
-          <ArrowRight data-icon="inline-end" />
-        </Button>
-        <Button render={<Link to="/wynajem" search={{ product: product.sku }} />}>Zapytaj</Button>
-      </CardFooter>
     </Card>
   );
 }
