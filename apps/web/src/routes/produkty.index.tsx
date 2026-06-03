@@ -111,8 +111,7 @@ function ProductsRoute() {
           <Badge variant="secondary">Katalog</Badge>
           <h1 className="text-4xl font-bold leading-tight md:text-6xl">Katalog produktów</h1>
           <p className="text-base/relaxed text-muted-foreground md:text-lg/relaxed">
-            Produkty i dodatki są widoczne publicznie, ale wszystkie zapytania wymagają ręcznego
-            potwierdzenia dostępności, warunków montażu i dojazdu.
+            Wybierz atrakcje i dodatki, a dostępność, warunki montażu i dojazd potwierdzi obsługa.
           </p>
         </div>
       </header>

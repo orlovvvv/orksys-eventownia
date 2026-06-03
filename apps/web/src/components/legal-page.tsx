@@ -14,7 +14,7 @@ export function LegalPage({ type }: { type: "terms" | "privacy" | "cookies" }) {
         </CardHeader>
         <CardContent className="max-w-3xl text-base/relaxed text-muted-foreground">
           {doc?.bodyMd}
-          <p className="mt-4">To roboczy dokument makietowy. Przed produkcją wymaga przeglądu prawnego.</p>
+          <p className="mt-4">Dokument ma charakter informacyjny. Aktualną treść regulaminu potwierdzimy przed finalną rezerwacją.</p>
         </CardContent>
       </Card>
     </main>

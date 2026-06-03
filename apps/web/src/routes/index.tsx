@@ -30,11 +30,10 @@ function HomeComponent() {
               </div>
               <div className="flex flex-col gap-4">
                 <h1 className="text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl">
-                  Katalog atrakcji z wyceną i ręcznym potwierdzeniem rezerwacji.
+                  Katalog atrakcji z wstępną wyceną i spokojnym potwierdzeniem rezerwacji.
                 </h1>
                 <p className="text-base/relaxed text-muted-foreground md:text-lg/relaxed">
-                  Eventownia obsługuje katalog, zapytania, wyceny, dostępność i płatności zaliczkowe w
-                  spokojnym procesie potwierdzanym przez operatora.
+                  Wybierz atrakcje, podaj szczegóły wydarzenia i otrzymaj potwierdzenie dostępności od obsługi.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -56,8 +55,8 @@ function HomeComponent() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {[
             { icon: ShieldCheck, title: "Bezpieczeństwo i higiena", text: "Każda atrakcja przechodzi kontrolę przed realizacją." },
-            { icon: Timer, title: "Szybkie wyceny", text: "Zapytania przechodzą przez czytelny proces kalkulacji." },
-            { icon: Truck, title: "Profesjonalny montaż", text: "Operator potwierdza dojazd, podłoże i warunki montażu." },
+            { icon: Timer, title: "Wstępna wycena", text: "Koszt produktów poznasz przed wysłaniem zapytania." },
+            { icon: Truck, title: "Profesjonalny montaż", text: "Obsługa potwierdza dojazd, podłoże i warunki montażu." },
           ].map((item) => (
             <Card key={item.title} className="items-center justify-center text-center md:min-h-[220px]">
               <CardContent className="flex h-full w-full max-w-sm flex-col items-center justify-center gap-4 px-6 py-8 text-center">
@@ -76,7 +75,7 @@ function HomeComponent() {
         <div className="flex flex-col gap-3">
           <h2 className="text-3xl font-bold">Kategorie atrakcji</h2>
           <p className="max-w-2xl text-base/relaxed text-muted-foreground">
-            Wybierz z głównych segmentów oferty i przejdź do produktów dostępnych w makiecie.
+            Wybierz kategorię i sprawdź produkty dostępne na wydarzenie.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 md:grid-rows-2">

@@ -6,11 +6,11 @@ export const Route = createFileRoute("/faq")({
 });
 
 const items = [
-  ["Czy mogę zarezerwować od razu?", "Nie w MVP. Każdy termin wymaga potwierdzenia operatora."],
-  ["Czy dojazd jest w cenie?", "Nie. Publiczna wycena pokazuje koszt dojazdu jako pozycję do potwierdzenia."],
+  ["Czy mogę zarezerwować od razu?", "Po wysłaniu zapytania obsługa potwierdzi termin i przygotuje rezerwację."],
+  ["Czy dojazd jest w cenie?", "Wstępna wycena nie dolicza automatycznie dojazdu. Potwierdzimy go po lokalizacji."],
   ["Czy potrzebny jest prąd?", "Większość dmuchańców wymaga dostępu do 230V i bezpiecznego podłoża."],
-  ["Co z pogodą?", "Decyzja o realizacji lub zmianie terminu jest operacyjna i pozostaje po stronie admina."],
-  ["Jak działa zaliczka?", "Mock płatności tworzy link po potwierdzeniu rezerwacji przez admina."],
+  ["Co z pogodą?", "Przy niesprzyjających warunkach obsługa pomoże potwierdzić bezpieczne rozwiązanie lub nowy termin."],
+  ["Jak działa zaliczka?", "Po potwierdzeniu rezerwacji otrzymasz informacje o płatności lub zaliczce."],
 ];
 
 function FaqRoute() {

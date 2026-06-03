@@ -36,7 +36,7 @@ function PublicStatusRoute() {
     <main className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-10 md:px-6">
       <Alert>
         <AlertTitle>Status publiczny</AlertTitle>
-        <AlertDescription>Token jest niezgadywalny w makiecie i nie wymaga konta klienta.</AlertDescription>
+        <AlertDescription>Link do statusu jest prywatny i nie wymaga zakładania konta.</AlertDescription>
       </Alert>
       <Card>
         <CardHeader>
@@ -73,7 +73,7 @@ function PublicStatusRoute() {
                 <div>{data.eventDate} {data.startTime}</div>
               </div>
               <div>
-                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Szacunek</div>
+                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Wstępna wycena</div>
                 <Money amountGrosz={data.totalEstimateGrosz} />
               </div>
             </>
