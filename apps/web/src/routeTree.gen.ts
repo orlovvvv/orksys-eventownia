@@ -30,6 +30,7 @@ import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProduktyIndexRouteImport } from './routes/produkty.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as RezerwacjaPublicTokenRouteImport } from './routes/rezerwacja.$publicToken'
 import { Route as ProduktySlugRouteImport } from './routes/produkty.$slug'
 import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
@@ -42,6 +43,9 @@ import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminAvailabilityRouteImport } from './routes/admin.availability'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminRequestsIndexRouteImport } from './routes/admin.requests.index'
+import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
+import { Route as AdminBookingsIndexRouteImport } from './routes/admin.bookings.index'
 import { Route as AdminRequestsIdRouteImport } from './routes/admin.requests.$id'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminBookingsIdRouteImport } from './routes/admin.bookings.$id'
@@ -155,6 +159,11 @@ const ProduktyIndexRoute = ProduktyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ProduktyRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const RezerwacjaPublicTokenRoute = RezerwacjaPublicTokenRouteImport.update({
   id: '/rezerwacja/$publicToken',
   path: '/rezerwacja/$publicToken',
@@ -215,6 +224,21 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRequestsIndexRoute = AdminRequestsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRequestsRoute,
+} as any)
+const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminProductsRoute,
+} as any)
+const AdminBookingsIndexRoute = AdminBookingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminBookingsRoute,
+} as any)
 const AdminRequestsIdRoute = AdminRequestsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -264,14 +288,17 @@ export interface FileRoutesByFullPath {
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/produkty/$slug': typeof ProduktySlugRoute
   '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/admin/': typeof AdminIndexRoute
   '/produkty/': typeof ProduktyIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
+  '/admin/bookings/': typeof AdminBookingsIndexRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/requests/': typeof AdminRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRoute
   '/dmuchance-na-festyny': typeof DmuchanceNaFestynyRoute
@@ -291,20 +318,21 @@ export interface FileRoutesByTo {
   '/wynajem': typeof WynajemRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/availability': typeof AdminAvailabilityRoute
-  '/admin/bookings': typeof AdminBookingsRouteWithChildren
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/pricing': typeof AdminPricingRoute
-  '/admin/products': typeof AdminProductsRouteWithChildren
-  '/admin/requests': typeof AdminRequestsRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/produkty/$slug': typeof ProduktySlugRoute
   '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/admin': typeof AdminIndexRoute
   '/produkty': typeof ProduktyIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
+  '/admin/bookings': typeof AdminBookingsIndexRoute
+  '/admin/products': typeof AdminProductsIndexRoute
+  '/admin/requests': typeof AdminRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -340,10 +368,14 @@ export interface FileRoutesById {
   '/kategorie/$slug': typeof KategorieSlugRoute
   '/produkty/$slug': typeof ProduktySlugRoute
   '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/admin/': typeof AdminIndexRoute
   '/produkty/': typeof ProduktyIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
+  '/admin/bookings/': typeof AdminBookingsIndexRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/requests/': typeof AdminRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -380,14 +412,17 @@ export interface FileRouteTypes {
     | '/kategorie/$slug'
     | '/produkty/$slug'
     | '/rezerwacja/$publicToken'
+    | '/admin/'
     | '/produkty/'
     | '/admin/bookings/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
+    | '/admin/bookings/'
+    | '/admin/products/'
+    | '/admin/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/cookies'
     | '/dashboard'
     | '/dmuchance-na-festyny'
@@ -407,20 +442,21 @@ export interface FileRouteTypes {
     | '/wynajem'
     | '/admin/audit'
     | '/admin/availability'
-    | '/admin/bookings'
     | '/admin/calendar'
     | '/admin/payments'
     | '/admin/pricing'
-    | '/admin/products'
-    | '/admin/requests'
     | '/admin/settings'
     | '/kategorie/$slug'
     | '/produkty/$slug'
     | '/rezerwacja/$publicToken'
+    | '/admin'
     | '/produkty'
     | '/admin/bookings/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
+    | '/admin/bookings'
+    | '/admin/products'
+    | '/admin/requests'
   id:
     | '__root__'
     | '/'
@@ -455,10 +491,14 @@ export interface FileRouteTypes {
     | '/kategorie/$slug'
     | '/produkty/$slug'
     | '/rezerwacja/$publicToken'
+    | '/admin/'
     | '/produkty/'
     | '/admin/bookings/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
+    | '/admin/bookings/'
+    | '/admin/products/'
+    | '/admin/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -635,6 +675,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProduktyIndexRouteImport
       parentRoute: typeof ProduktyRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/rezerwacja/$publicToken': {
       id: '/rezerwacja/$publicToken'
       path: '/rezerwacja/$publicToken'
@@ -719,6 +766,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/requests/': {
+      id: '/admin/requests/'
+      path: '/'
+      fullPath: '/admin/requests/'
+      preLoaderRoute: typeof AdminRequestsIndexRouteImport
+      parentRoute: typeof AdminRequestsRoute
+    }
+    '/admin/products/': {
+      id: '/admin/products/'
+      path: '/'
+      fullPath: '/admin/products/'
+      preLoaderRoute: typeof AdminProductsIndexRouteImport
+      parentRoute: typeof AdminProductsRoute
+    }
+    '/admin/bookings/': {
+      id: '/admin/bookings/'
+      path: '/'
+      fullPath: '/admin/bookings/'
+      preLoaderRoute: typeof AdminBookingsIndexRouteImport
+      parentRoute: typeof AdminBookingsRoute
+    }
     '/admin/requests/$id': {
       id: '/admin/requests/$id'
       path: '/$id'
@@ -745,10 +813,12 @@ declare module '@tanstack/react-router' {
 
 interface AdminBookingsRouteChildren {
   AdminBookingsIdRoute: typeof AdminBookingsIdRoute
+  AdminBookingsIndexRoute: typeof AdminBookingsIndexRoute
 }
 
 const AdminBookingsRouteChildren: AdminBookingsRouteChildren = {
   AdminBookingsIdRoute: AdminBookingsIdRoute,
+  AdminBookingsIndexRoute: AdminBookingsIndexRoute,
 }
 
 const AdminBookingsRouteWithChildren = AdminBookingsRoute._addFileChildren(
@@ -757,10 +827,12 @@ const AdminBookingsRouteWithChildren = AdminBookingsRoute._addFileChildren(
 
 interface AdminProductsRouteChildren {
   AdminProductsIdRoute: typeof AdminProductsIdRoute
+  AdminProductsIndexRoute: typeof AdminProductsIndexRoute
 }
 
 const AdminProductsRouteChildren: AdminProductsRouteChildren = {
   AdminProductsIdRoute: AdminProductsIdRoute,
+  AdminProductsIndexRoute: AdminProductsIndexRoute,
 }
 
 const AdminProductsRouteWithChildren = AdminProductsRoute._addFileChildren(
@@ -769,10 +841,12 @@ const AdminProductsRouteWithChildren = AdminProductsRoute._addFileChildren(
 
 interface AdminRequestsRouteChildren {
   AdminRequestsIdRoute: typeof AdminRequestsIdRoute
+  AdminRequestsIndexRoute: typeof AdminRequestsIndexRoute
 }
 
 const AdminRequestsRouteChildren: AdminRequestsRouteChildren = {
   AdminRequestsIdRoute: AdminRequestsIdRoute,
+  AdminRequestsIndexRoute: AdminRequestsIndexRoute,
 }
 
 const AdminRequestsRouteWithChildren = AdminRequestsRoute._addFileChildren(
@@ -789,6 +863,7 @@ interface AdminRouteChildren {
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
   AdminRequestsRoute: typeof AdminRequestsRouteWithChildren
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -801,6 +876,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminProductsRoute: AdminProductsRouteWithChildren,
   AdminRequestsRoute: AdminRequestsRouteWithChildren,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

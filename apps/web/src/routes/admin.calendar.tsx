@@ -138,7 +138,7 @@ function AdminCalendarRoute() {
                   ))}
                 </div>
                 <div className="grid grid-cols-7 bg-border/70">
-                  {monthCells.map((cell) => {
+                  {monthCells.map((cell, index) => {
                     const cellBookings = filteredBookings.filter((booking) => toDateKey(new Date(booking.eventStartAt)) === cell.key);
                     const cellBlocks = filteredBlocks.filter((block) => doesRangeOverlapDay(cell.key, block.startsAt, block.endsAt));
                     const selected = selectedDay === cell.key;
@@ -149,6 +149,8 @@ function AdminCalendarRoute() {
                         onClick={() => setSelectedDay(cell.key)}
                         className={[
                           "min-h-32 bg-card p-2 text-left transition-colors hover:bg-muted/60",
+                          index === 35 ? "rounded-bl-2xl" : "",
+                          index === 41 ? "rounded-br-2xl" : "",
                           selected ? "ring-2 ring-primary ring-inset" : "",
                           cell.inMonth ? "" : "text-muted-foreground",
                         ].join(" ")}
