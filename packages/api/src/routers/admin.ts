@@ -197,7 +197,9 @@ export const adminRouter = router({
         rule.basePriceGrosz = input.basePriceGrosz;
         rule.baseHours = input.baseHours;
         rule.extraHourPercent = input.extraHourPercent;
-        rule.depositAmountGrosz = input.depositAmountGrosz ?? rule.depositAmountGrosz;
+        if (input.depositAmountGrosz !== undefined) {
+          rule.depositAmountGrosz = input.depositAmountGrosz;
+        }
         rule.depositMode = rule.depositAmountGrosz ? "fixed" : "none";
         rule.updatedAt = nowIso();
         appendAuditLog("product.pricing.update", "price_rule", rule.id, before, rule);

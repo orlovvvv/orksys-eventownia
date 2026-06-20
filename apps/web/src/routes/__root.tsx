@@ -40,12 +40,13 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isAdminRoute = pathname.startsWith("/admin");
   const showFooter =
-    !pathname.startsWith("/admin") &&
+    !isAdminRoute &&
     !pathname.startsWith("/dashboard") &&
     !pathname.startsWith("/todos") &&
     !pathname.startsWith("/login");
-  const showDevtools = import.meta.env.DEV && pathname.startsWith("/admin");
+  const showDevtools = import.meta.env.DEV && isAdminRoute;
 
   return (
     <>
@@ -57,11 +58,15 @@ function RootComponent() {
         storageKey="vite-ui-theme"
       >
         <OrderCartProvider>
-          <div className="grid min-h-svh grid-rows-[auto_1fr_auto]">
-            <SiteHeader />
+          {isAdminRoute ? (
             <Outlet />
-            {showFooter ? <SiteFooter /> : null}
-          </div>
+          ) : (
+            <div className="grid min-h-svh grid-rows-[auto_1fr_auto]">
+              <SiteHeader />
+              <Outlet />
+              {showFooter ? <SiteFooter /> : null}
+            </div>
+          )}
           <Toaster richColors />
         </OrderCartProvider>
       </ThemeProvider>
