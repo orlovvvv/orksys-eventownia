@@ -58,7 +58,7 @@ function AdminCalendarRoute() {
     });
   }, [availabilityBlocks, categoryFilter, showBlocks]);
   const selectedBookings = filteredBookings.filter((booking) => toDateKey(new Date(booking.eventStartAt)) === selectedDay);
-  const selectedBlocks = filteredBlocks.filter((block) => isDateInsideRange(selectedDay, block.startsAt, block.endsAt));
+  const selectedBlocks = filteredBlocks.filter((block) => doesRangeOverlapDay(selectedDay, block.startsAt, block.endsAt));
 
   return (
     <AdminShell
@@ -140,7 +140,7 @@ function AdminCalendarRoute() {
                 <div className="grid grid-cols-7 bg-border/70">
                   {monthCells.map((cell) => {
                     const cellBookings = filteredBookings.filter((booking) => toDateKey(new Date(booking.eventStartAt)) === cell.key);
-                    const cellBlocks = filteredBlocks.filter((block) => isDateInsideRange(cell.key, block.startsAt, block.endsAt));
+                    const cellBlocks = filteredBlocks.filter((block) => doesRangeOverlapDay(cell.key, block.startsAt, block.endsAt));
                     const selected = selectedDay === cell.key;
                     return (
                       <button
@@ -253,7 +253,10 @@ function buildMonthCells(month: Date) {
   });
 }
 
-function isDateInsideRange(dayKey: string, startsAt: string, endsAt: string) {
-  const day = new Date(`${dayKey}T12:00:00`);
-  return day >= new Date(startsAt) && day <= new Date(endsAt);
+function doesRangeOverlapDay(dayKey: string, startsAt: string, endsAt: string) {
+  const dayStart = new Date(`${dayKey}T00:00:00`);
+  const nextDayStart = new Date(dayStart);
+  nextDayStart.setDate(dayStart.getDate() + 1);
+
+  return new Date(startsAt) < nextDayStart && new Date(endsAt) > dayStart;
 }
