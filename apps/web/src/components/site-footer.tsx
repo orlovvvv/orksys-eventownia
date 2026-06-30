@@ -1,15 +1,22 @@
 import { Link } from "@tanstack/react-router";
 
+import { BRAND } from "@/lib/brand";
+
+import { BrandLogo } from "./brand-logo";
+
 export default function SiteFooter() {
   return (
     <footer className="mt-auto bg-surface-container-low py-12">
       <div className="mx-auto grid w-full max-w-page gap-8 px-4 md:grid-cols-4 md:px-6">
         <div className="flex flex-col gap-3">
-          <div className="text-sm font-bold text-foreground">Eventownia</div>
-          <p className="max-w-xs text-sm/relaxed text-muted-foreground">
-            Wynajem atrakcji eventowych z potwierdzeniem dostępności przez obsługę.
+          <Link to="/" className="self-start">
+            <BrandLogo imageClassName="h-14" nameClassName="text-lg" />
+          </Link>
+          <p className="max-w-xs text-sm/relaxed text-muted-foreground">{BRAND.description}</p>
+          <p className="text-sm font-semibold text-primary" translate="no">
+            {BRAND.domain}
           </p>
-          <p className="text-sm text-muted-foreground">© 2026 Eventownia. Wszystkie prawa zastrzeżone.</p>
+          <p className="text-sm text-muted-foreground">© 2026 {BRAND.fullName}. Wszystkie prawa zastrzeżone.</p>
         </div>
         <div className="flex flex-col gap-3">
           <div className="text-sm font-bold text-foreground">Oferta</div>

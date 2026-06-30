@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { initials } from "@/lib/admin-status";
 
 export type AdminShellAction = {
@@ -84,9 +85,8 @@ export function AdminShell({ title, description, eyebrow, actions = [], children
     <div className="min-h-svh bg-background text-foreground lg:grid lg:grid-cols-[260px_1fr]">
       <aside className="sticky top-0 hidden h-svh flex-col border-r border-border/70 bg-card lg:flex">
         <div className="flex flex-col gap-4 p-6">
-          <Link to="/admin" className="flex items-center gap-3 text-xl font-bold text-primary">
-            <Grid2X2 data-icon="inline-start" />
-            Eventownia
+          <Link to="/admin" className="min-w-0">
+            <BrandLogo imageClassName="h-12" nameClassName="text-xl" />
           </Link>
           <div>
             <div className="text-sm font-semibold">Panel operatora</div>
@@ -118,7 +118,9 @@ export function AdminShell({ title, description, eyebrow, actions = [], children
                 <Menu />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-72">
-                <DropdownMenuLabel>Eventownia</DropdownMenuLabel>
+                <DropdownMenuLabel className="normal-case">
+                  <BrandLogo imageClassName="h-10" nameClassName="text-sm" locationClassName="text-[0.7rem]" />
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {adminSections.map((section) => (
                   <DropdownMenuGroup key={section.label}>

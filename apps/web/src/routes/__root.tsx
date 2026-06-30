@@ -8,6 +8,7 @@ import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
 import { OrderCartProvider } from "@/components/order-cart-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { BRAND } from "@/lib/brand";
 import type { trpc } from "@/utils/trpc";
 
 import "../index.css";
@@ -22,17 +23,24 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
       {
-        title: "orksys-eventownia",
+        title: BRAND.fullName,
       },
       {
         name: "description",
-        content: "orksys-eventownia is a web application",
+        content: BRAND.description,
       },
     ],
     links: [
       {
         rel: "icon",
-        href: "/favicon.ico",
+        href: "/brand/logo-mark-light.webp",
+        type: "image/webp",
+      },
+      {
+        rel: "icon",
+        href: "/brand/logo-mark-dark.webp",
+        type: "image/webp",
+        media: "(prefers-color-scheme: dark)",
       },
     ],
   }),
