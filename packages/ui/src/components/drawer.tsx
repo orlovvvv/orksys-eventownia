@@ -31,14 +31,16 @@ function DrawerContent({ className, ...props }: DrawerPrimitive.Popup.Props) {
   return (
     <DrawerPortal>
       <DrawerOverlay />
-      <DrawerPrimitive.Popup
-        data-slot="drawer-content"
-        className={cn(
-          "fixed right-0 top-0 z-50 flex h-dvh w-[min(22rem,calc(100vw-2rem))] flex-col bg-popover text-popover-foreground shadow-floating ring-1 ring-white/70 duration-150 outline-none data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-right dark:ring-white/10",
-          className,
-        )}
-        {...props}
-      />
+      <DrawerPrimitive.Viewport data-slot="drawer-viewport" className="fixed inset-0 z-50 pointer-events-none">
+        <DrawerPrimitive.Popup
+          data-slot="drawer-content"
+          className={cn(
+            "pointer-events-auto fixed right-0 top-0 z-50 flex h-dvh w-[min(22rem,calc(100vw-2rem))] flex-col bg-popover text-popover-foreground shadow-floating ring-1 ring-white/70 duration-150 outline-none data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-right dark:ring-white/10",
+            className,
+          )}
+          {...props}
+        />
+      </DrawerPrimitive.Viewport>
     </DrawerPortal>
   );
 }
