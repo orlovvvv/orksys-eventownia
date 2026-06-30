@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
-import { BrandLogo } from "./brand-logo";
 import { BRAND } from "@/lib/brand";
+
+import { BrandLogo } from "./brand-logo";
 
 export default function SiteFooter() {
   return (

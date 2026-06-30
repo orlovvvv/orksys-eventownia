@@ -187,7 +187,7 @@ const productAssets: ProductAsset[] = products.map((product) => ({
 const adminUsers: AdminUser[] = [
   {
     id: "admin_mock_owner",
-    email: "admin@eventownia.local",
+    email: "admin@dmuchance.lomza.pl",
     name: "Mock Admin",
     role: "owner",
     active: true,
@@ -339,10 +339,10 @@ const legalDocuments: LegalDocument[] = [
 ];
 
 const businessSettings: BusinessSettings = {
-  businessName: "Eventownia",
+  businessName: "Dmuchańce Łomża",
   publicPhone: "+48 600 000 000",
-  publicEmail: "kontakt@eventownia.local",
-  serviceAreaDescription: "Kraków, okolice i wybrane lokalizacje w Małopolsce po potwierdzeniu dojazdu.",
+  publicEmail: "kontakt@dmuchance.lomza.pl",
+  serviceAreaDescription: "Łomża, okolice i wybrane lokalizacje w województwie podlaskim po potwierdzeniu dojazdu.",
   defaultCurrency: "PLN",
   defaultBaseHours: 5,
   defaultExtraHourPercent: 20,

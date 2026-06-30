@@ -15,7 +15,7 @@ export default function Header() {
     <div>
       <div className="flex flex-row items-center justify-between px-2 py-1">
         <nav className="flex items-center gap-4 text-lg">
-          <Link to="/" aria-label="Eventownia home">
+          <Link to="/" aria-label="Dmuchańce Łomża - strona główna">
             <BrandLogo imageClassName="h-10" nameClassName="text-base" />
           </Link>
           {links.map(({ to, label }) => {
