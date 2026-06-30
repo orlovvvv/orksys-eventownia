@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { BrandLogo } from "./brand-logo";
 import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
 
@@ -13,7 +14,10 @@ export default function Header() {
   return (
     <div>
       <div className="flex flex-row items-center justify-between px-2 py-1">
-        <nav className="flex gap-4 text-lg">
+        <nav className="flex items-center gap-4 text-lg">
+          <Link to="/" aria-label="Eventownia home">
+            <BrandLogo imageClassName="h-10" nameClassName="text-base" />
+          </Link>
           {links.map(({ to, label }) => {
             return (
               <Link key={to} to={to}>

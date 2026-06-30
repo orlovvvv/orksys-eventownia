@@ -2,9 +2,10 @@ import { Badge } from "@orksys-eventownia/ui/components/badge";
 import { Button } from "@orksys-eventownia/ui/components/button";
 import { cn } from "@orksys-eventownia/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { Grid2X2, Settings, ShoppingCart } from "lucide-react";
+import { Settings, ShoppingCart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { BrandLogo } from "./brand-logo";
 import { ModeToggle } from "./mode-toggle";
 import { useOrderCart } from "./order-cart-provider";
 
@@ -33,9 +34,8 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-50 bg-background/85 shadow-sm backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-page flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
         <div className="flex items-center justify-between gap-3">
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-primary">
-            <Grid2X2 data-icon="inline-start" />
-            Eventownia
+          <Link to="/" className="min-w-0">
+            <BrandLogo imageClassName="h-12 md:h-14" nameClassName="text-lg md:text-xl" />
           </Link>
           <div className="flex items-center gap-2 md:hidden">
             <Button variant="outline" size="sm" render={<Link to="/wynajem" search={{}} />}>
