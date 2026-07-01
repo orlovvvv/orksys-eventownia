@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/product-card";
 import { getCategoryImage } from "@/lib/mock-images";
 import { trpc } from "@/utils/trpc";
 
-export const Route = createFileRoute("/kategorie/$slug")({
+export const Route = createFileRoute("/categories/$slug")({
   component: CategoryRoute,
 });
 
@@ -35,7 +35,7 @@ function CategoryRoute() {
             <h1 className="text-4xl font-bold leading-tight md:text-5xl">{category.data.namePl}</h1>
             <p className="text-base/relaxed text-primary-foreground/85">{category.data.descriptionPl}</p>
             <div>
-              <Button render={<Link to="/wynajem" search={{}} />}>
+              <Button render={<Link to="/cart" search={{}} />}>
                 Zapytaj o zestaw
                 <ArrowRight data-icon="inline-end" />
               </Button>
@@ -50,7 +50,7 @@ function CategoryRoute() {
             <h2 className="text-3xl font-bold">Produkty w kategorii</h2>
             <p className="text-sm text-muted-foreground">Znaleziono: {category.data.products.length}</p>
           </div>
-          <Button variant="outline" render={<Link to="/produkty" />}>
+          <Button variant="outline" render={<Link to="/products" />}>
             Cały katalog
           </Button>
         </div>

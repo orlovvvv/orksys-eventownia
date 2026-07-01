@@ -41,11 +41,8 @@ function AdminProductDetailRoute() {
   const [teardownMinutes, setTeardownMinutes] = useState(45);
   const [cleaningBufferMinutes, setCleaningBufferMinutes] = useState(30);
   const [inventoryCount, setInventoryCount] = useState(1);
-  const [quoteMode, setQuoteMode] = useState<"automatic" | "manual">("automatic");
-  const [basePriceGrosz, setBasePriceGrosz] = useState<number | null>(null);
-  const [baseHours, setBaseHours] = useState<number | null>(5);
-  const [extraHourPercent, setExtraHourPercent] = useState(20);
-  const [depositAmountGrosz, setDepositAmountGrosz] = useState<number | null>(30000);
+  const [hourlyPriceZloty, setHourlyPriceZloty] = useState(0);
+  const [depositAmountZloty, setDepositAmountZloty] = useState<number | null>(300);
   const invalidate = () => void queryClient.invalidateQueries();
   const update = useMutation(trpc.admin.products.update.mutationOptions({ onSuccess: () => {
     toast.success("Produkt zapisany.");
@@ -70,11 +67,7 @@ function AdminProductDetailRoute() {
   const typeItems = [
     { value: "rental_product", label: "Produkt wynajmu" },
     { value: "addon", label: "Dodatek" },
-    { value: "manual_quote_extra", label: "Ręczna wycena" },
-  ];
-  const quoteModeItems = [
-    { value: "automatic", label: "Automatyczny" },
-    { value: "manual", label: "Ręczny" },
+    { value: "event_extra", label: "Dodatek eventowy" },
   ];
 
   useEffect(() => {
@@ -94,11 +87,8 @@ function AdminProductDetailRoute() {
     setTeardownMinutes(product.data.teardownMinutes);
     setCleaningBufferMinutes(product.data.cleaningBufferMinutes);
     setInventoryCount(product.data.inventoryCount);
-    setQuoteMode(product.data.pricing?.quoteMode ?? "automatic");
-    setBasePriceGrosz(product.data.pricing?.basePriceGrosz ?? null);
-    setBaseHours(product.data.pricing?.baseHours ?? null);
-    setExtraHourPercent(product.data.pricing?.extraHourPercent ?? 20);
-    setDepositAmountGrosz(product.data.pricing?.depositAmountGrosz ?? null);
+    setHourlyPriceZloty(product.data.pricing?.hourlyPriceZloty ?? 0);
+    setDepositAmountZloty(product.data.pricing?.depositAmountZloty ?? null);
   }, [product.data]);
 
   return (
@@ -187,22 +177,13 @@ function AdminProductDetailRoute() {
             <Card>
               <CardHeader>
                 <CardTitle>Cennik</CardTitle>
-                <CardDescription>Aktualnie: <Money amountGrosz={product.data.pricing?.basePriceGrosz} /></CardDescription>
+                <CardDescription>Aktualnie: <Money amountZloty={product.data.pricing?.hourlyPriceZloty} />/h</CardDescription>
               </CardHeader>
               <CardContent>
                 <FieldGroup>
-                  <Field>
-                    <FieldLabel>Tryb wyceny</FieldLabel>
-                    <Select items={quoteModeItems} value={quoteMode} onValueChange={(value) => setQuoteMode(String(value) as "automatic" | "manual")}>
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectGroup>{quoteModeItems.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectGroup></SelectContent>
-                    </Select>
-                  </Field>
-                  <Field><FieldLabel>Cena bazowa (grosz)</FieldLabel><Input type="number" value={basePriceGrosz ?? ""} onChange={(event) => setBasePriceGrosz(event.target.value ? Number(event.target.value) : null)} /></Field>
-                  <Field><FieldLabel>Godziny bazowe</FieldLabel><Input type="number" value={baseHours ?? ""} onChange={(event) => setBaseHours(event.target.value ? Number(event.target.value) : null)} /></Field>
-                  <Field><FieldLabel>Dodatkowa godzina (%)</FieldLabel><Input type="number" value={extraHourPercent} onChange={(event) => setExtraHourPercent(Number(event.target.value))} /></Field>
-                  <Field><FieldLabel>Zaliczka (grosz)</FieldLabel><Input type="number" value={depositAmountGrosz ?? ""} onChange={(event) => setDepositAmountGrosz(event.target.value ? Number(event.target.value) : null)} /></Field>
-                  <Button disabled={updatePricing.isPending} onClick={() => updatePricing.mutate({ id, quoteMode, basePriceGrosz, baseHours, extraHourPercent, depositAmountGrosz })}>
+                  <Field><FieldLabel>Stawka godzinowa (zł)</FieldLabel><Input type="number" min={0} value={hourlyPriceZloty} onChange={(event) => setHourlyPriceZloty(Number(event.target.value))} /></Field>
+                  <Field><FieldLabel>Zaliczka (zł)</FieldLabel><Input type="number" min={0} value={depositAmountZloty ?? ""} onChange={(event) => setDepositAmountZloty(event.target.value ? Number(event.target.value) : null)} /></Field>
+                  <Button disabled={updatePricing.isPending} onClick={() => updatePricing.mutate({ id, hourlyPriceZloty, depositAmountZloty })}>
                     <Save data-icon="inline-start" />
                     Zapisz cennik
                   </Button>
@@ -252,7 +233,7 @@ function AdminProductDetailRoute() {
                         namePl,
                         shortDescriptionPl,
                         longDescriptionPl,
-                        productType: productType as "rental_product" | "addon" | "manual_quote_extra",
+                        productType: productType as "rental_product" | "addon" | "event_extra",
                         active,
                         publicVisible,
                         requiresPower,

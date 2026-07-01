@@ -10,7 +10,7 @@ export const availabilityRouter = router({
         items: z.array(z.object({ productId: z.string(), quantity: z.number().int().min(1) })),
         date: z.string().min(1),
         startTime: z.string().optional(),
-        durationHours: z.number().positive(),
+        durationHours: z.number().int().positive(),
       }),
     )
     .query(({ input }) => checkAvailability(input)),

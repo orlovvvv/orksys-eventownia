@@ -24,9 +24,10 @@ const customerSchema = z.object({
 const eventSchema = z.object({
   date: z.string().min(1),
   startTime: z.string().min(1),
-  durationHours: z.number().positive(),
+  durationHours: z.number().int().positive(),
   location: z.object({
     street: z.string().min(1),
+    addressDetails: z.string().optional(),
     postalCode: z.string().min(1),
     city: z.string().min(1),
     country: z.literal("PL").default("PL"),
@@ -70,6 +71,9 @@ export const rentalRequestsRouter = router({
         },
         items: input.items,
       });
+      if (quote.quoteMode === "requires_hourly_price") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Every selected item must have an hourly price." });
+      }
 
       const customer = {
         id: makeId("cust"),
@@ -86,6 +90,7 @@ export const rentalRequestsRouter = router({
         customerId: customer.id,
         label: "Lokalizacja wydarzenia",
         street: input.event.location.street,
+        addressDetails: input.event.location.addressDetails?.trim() || null,
         postalCode: input.event.location.postalCode,
         city: input.event.location.city,
         country: "PL" as const,
@@ -105,10 +110,10 @@ export const rentalRequestsRouter = router({
         startTime: input.event.startTime,
         durationHours: input.event.durationHours,
         quoteMode: quote.quoteMode,
-        subtotalGrosz: quote.subtotalGrosz,
-        travelFeeGrosz: null,
-        discountGrosz: 0,
-        totalEstimateGrosz: quote.totalEstimateGrosz,
+        subtotalZloty: quote.subtotalZloty,
+        travelFeeZloty: null,
+        discountZloty: 0,
+        totalEstimateZloty: quote.totalEstimateZloty,
         message: input.message ?? null,
         source: "website",
         turnstileVerifiedAt: now,
@@ -126,10 +131,10 @@ export const rentalRequestsRouter = router({
           rentalRequestId: request.id,
           productId: product?.id ?? item.sku,
           quantity: item.quantity,
-          unitPriceGrosz: line?.basePriceGrosz ?? null,
-          extraHours: line?.extraHours ?? 0,
-          lineTotalGrosz: line?.lineTotalGrosz ?? null,
-          quoteMode: line?.quoteMode ?? "manual",
+          hourlyPriceZloty: line?.hourlyPriceZloty ?? null,
+          billableHours: line?.billableHours ?? input.event.durationHours,
+          lineTotalZloty: line?.lineTotalZloty ?? null,
+          pricingStatus: line?.pricingStatus ?? "missing_hourly_price",
           createdAt: now,
           updatedAt: now,
         };

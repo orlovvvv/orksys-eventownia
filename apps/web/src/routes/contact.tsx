@@ -9,7 +9,7 @@ import { useState } from "react";
 
 import { trpc } from "@/utils/trpc";
 
-export const Route = createFileRoute("/kontakt")({
+export const Route = createFileRoute("/contact")({
   component: ContactRoute,
 });
 

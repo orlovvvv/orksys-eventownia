@@ -20,6 +20,8 @@ const statusLabels: Record<string, string> = {
   blocked: "Zajęte",
   sent: "Wysłane",
   manual: "Ręcznie",
+  requires_hourly_price: "Brak stawki",
+  automatic_with_manual_travel_fee: "Stawka + dojazd",
   maintenance: "Serwis",
   blackout: "Blokada",
   automatic: "Automatyczny",
@@ -39,6 +41,7 @@ const positiveStatuses = new Set([
   "completed",
   "sent",
   "automatic",
+  "automatic_with_manual_travel_fee",
 ]);
 
 const destructiveStatuses = new Set([
@@ -57,6 +60,7 @@ const warningStatuses = new Set([
   "unpaid",
   "maintenance",
   "manual",
+  "requires_hourly_price",
 ]);
 
 export function getStatusLabel(status: string | null | undefined) {

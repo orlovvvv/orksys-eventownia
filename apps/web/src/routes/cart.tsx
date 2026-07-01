@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { OrderBuilder } from "@/components/order-builder";
 
-export const Route = createFileRoute("/wynajem")({
+export const Route = createFileRoute("/cart")({
   validateSearch: (search: Record<string, unknown>): { product?: string; date?: string } => {
     return {
       ...(typeof search.product === "string" ? { product: search.product } : {}),

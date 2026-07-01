@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin-shell";
+import { EstimateSummaryView } from "@/components/estimate-summary";
 import { Money } from "@/components/money";
 import { StatusBadge } from "@/components/status-badge";
 import { compactId } from "@/lib/admin-status";
@@ -29,6 +30,14 @@ const manualPaymentOptions = [
   { value: "deposit_paid", label: "Zaliczka opłacona" },
   { value: "paid", label: "Opłacone" },
 ];
+
+function formatLocationAddress(location: { street?: string | null; addressDetails?: string | null; postalCode?: string | null; city?: string | null } | null | undefined) {
+  if (!location) return "Brak adresu";
+  return [
+    [location.street, location.addressDetails].filter(Boolean).join(", "),
+    [location.postalCode, location.city].filter(Boolean).join(" "),
+  ].filter(Boolean).join(", ");
+}
 
 function AdminOrderDetailRoute() {
   const { id } = Route.useParams();
@@ -50,11 +59,11 @@ function AdminOrderDetailRoute() {
   });
   const [adminNotes, setAdminNotes] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
-  const [travelFeeGrosz, setTravelFeeGrosz] = useState(0);
-  const [discountGrosz, setDiscountGrosz] = useState(0);
-  const [depositRequiredGrosz, setDepositRequiredGrosz] = useState(0);
+  const [travelFeeZloty, setTravelFeeZloty] = useState(0);
+  const [discountZloty, setDiscountZloty] = useState(0);
+  const [depositRequiredZloty, setDepositRequiredZloty] = useState(0);
   const [manualPaymentStatus, setManualPaymentStatus] = useState("unpaid");
-  const [paidAmountGrosz, setPaidAmountGrosz] = useState(0);
+  const [paidAmountZloty, setPaidAmountZloty] = useState(0);
   const [paymentNotes, setPaymentNotes] = useState("");
   const [infoMessage, setInfoMessage] = useState("Prosimy o doprecyzowanie dojazdu, podłoża i dostępu do zasilania.");
   const [declineReason, setDeclineReason] = useState("Termin lub asortyment niedostępny.");
@@ -93,16 +102,17 @@ function AdminOrderDetailRoute() {
     toast.success("Wysłano potwierdzenie.");
     invalidate();
   } }));
+  const locationAddress = formatLocationAddress(data?.location);
 
   useEffect(() => {
     if (!data) return;
     setAdminNotes(data.adminNotes ?? "");
     setCustomerNotes(data.customerNotes ?? "");
-    setTravelFeeGrosz(data.travelFeeGrosz ?? 0);
-    setDiscountGrosz(data.discountGrosz ?? 0);
-    setDepositRequiredGrosz(data.depositRequiredGrosz ?? 0);
+    setTravelFeeZloty(data.travelFeeZloty ?? 0);
+    setDiscountZloty(data.discountZloty ?? 0);
+    setDepositRequiredZloty(data.depositRequiredZloty ?? 0);
     setManualPaymentStatus(data.manualPaymentStatus ?? "unpaid");
-    setPaidAmountGrosz(data.paidAmountGrosz ?? 0);
+    setPaidAmountZloty(data.paidAmountZloty ?? 0);
     setPaymentNotes(data.paymentNotes ?? "");
   }, [data]);
 
@@ -133,8 +143,8 @@ function AdminOrderDetailRoute() {
               <CardContent className="grid gap-3 md:grid-cols-4">
                 <InfoTile label="Start" value={formatDateTime(data.eventStartAt)} />
                 <InfoTile label="Czas" value={`${data.durationHours}h`} />
-                <InfoTile label="Lokalizacja" value={data.location?.city ?? "Brak miasta"} helper={`${data.location?.street ?? ""}, ${data.location?.postalCode ?? ""}`} />
-                <InfoTile label="Razem" value={<Money amountGrosz={data.totalGrosz} />} emphasis />
+                <InfoTile label="Lokalizacja" value={data.location?.city ?? "Brak miasta"} helper={locationAddress} />
+                <InfoTile label="Razem" value={<Money amountZloty={data.totalZloty} />} emphasis />
               </CardContent>
             </Card>
 
@@ -172,6 +182,8 @@ function AdminOrderDetailRoute() {
               </CardContent>
             </Card>
 
+            <EstimateSummaryView summary={data.estimateSummary} />
+
             <Card>
               <CardHeader>
                 <CardTitle>Produkty i kwoty</CardTitle>
@@ -179,23 +191,23 @@ function AdminOrderDetailRoute() {
               </CardHeader>
               <CardContent className="flex flex-col gap-5">
                 <Table>
-                  <TableHeader><TableRow><TableHead>Produkt</TableHead><TableHead>Ilość</TableHead><TableHead>Cena</TableHead><TableHead>Kwota</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Produkt</TableHead><TableHead>Ilość</TableHead><TableHead>Stawka</TableHead><TableHead>Kwota</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {data.items.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.product?.namePl ?? "Pozycja"}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell><Money amountGrosz={item.unitPriceGrosz} /></TableCell>
-                        <TableCell><Money amountGrosz={item.lineTotalGrosz} /></TableCell>
+                        <TableCell><Money amountZloty={item.hourlyPriceZloty} />/h</TableCell>
+                        <TableCell><Money amountZloty={item.lineTotalZloty} /></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
                 <div className="grid gap-3 md:grid-cols-4">
-                  <InfoTile label="Produkty" value={<Money amountGrosz={data.subtotalGrosz} />} />
-                  <InfoTile label="Dojazd" value={<Money amountGrosz={data.travelFeeGrosz} />} />
-                  <InfoTile label="Rabat" value={<Money amountGrosz={data.discountGrosz} />} />
-                  <InfoTile label="Razem" value={<Money amountGrosz={data.totalGrosz} />} emphasis />
+                  <InfoTile label="Produkty" value={<Money amountZloty={data.subtotalZloty} />} />
+                  <InfoTile label="Dojazd" value={<Money amountZloty={data.travelFeeZloty} />} />
+                  <InfoTile label="Rabat" value={<Money amountZloty={data.discountZloty} />} />
+                  <InfoTile label="Razem" value={<Money amountZloty={data.totalZloty} />} emphasis />
                 </div>
               </CardContent>
             </Card>
@@ -206,7 +218,7 @@ function AdminOrderDetailRoute() {
                 <CardDescription>{data.location?.accessNotes ?? "Brak dodatkowych notatek o dostępie."}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-2">
-                <InfoTile label="Adres" value={`${data.location?.street ?? ""}, ${data.location?.postalCode ?? ""} ${data.location?.city ?? ""}`} />
+                <InfoTile label="Adres" value={locationAddress} />
                 <InfoTile label="Zasilanie" value={data.location?.powerAvailable ? "Dostępne" : "Do potwierdzenia"} />
               </CardContent>
             </Card>
@@ -235,21 +247,21 @@ function AdminOrderDetailRoute() {
                 {data.kind === "pending" ? (
                   <>
                     <Field>
-                      <FieldLabel>Dojazd (grosz)</FieldLabel>
-                      <Input type="number" value={travelFeeGrosz} onChange={(event) => setTravelFeeGrosz(Number(event.target.value))} />
+                      <FieldLabel>Dojazd (zł)</FieldLabel>
+                      <Input type="number" value={travelFeeZloty} onChange={(event) => setTravelFeeZloty(Number(event.target.value))} />
                     </Field>
                     <Field>
-                      <FieldLabel>Rabat (grosz)</FieldLabel>
-                      <Input type="number" value={discountGrosz} onChange={(event) => setDiscountGrosz(Number(event.target.value))} />
+                      <FieldLabel>Rabat (zł)</FieldLabel>
+                      <Input type="number" value={discountZloty} onChange={(event) => setDiscountZloty(Number(event.target.value))} />
                     </Field>
                     <Field>
-                      <FieldLabel>Wymagana zaliczka (grosz)</FieldLabel>
-                      <Input type="number" value={depositRequiredGrosz} onChange={(event) => setDepositRequiredGrosz(Number(event.target.value))} />
+                      <FieldLabel>Wymagana zaliczka (zł)</FieldLabel>
+                      <Input type="number" value={depositRequiredZloty} onChange={(event) => setDepositRequiredZloty(Number(event.target.value))} />
                       <FieldDescription>Rozliczenie pozostaje ręczne, bez linków online.</FieldDescription>
                     </Field>
                     <Button
                       disabled={confirm.isPending}
-                      onClick={() => confirm.mutate({ id: data.id, travelFeeGrosz, discountGrosz, depositRequiredGrosz, adminNotes })}
+                      onClick={() => confirm.mutate({ id: data.id, travelFeeZloty, discountZloty, depositRequiredZloty, adminNotes })}
                     >
                       <CheckCircle data-icon="inline-start" />
                       Potwierdź rezerwację
@@ -285,8 +297,8 @@ function AdminOrderDetailRoute() {
                       </Select>
                     </Field>
                     <Field>
-                      <FieldLabel>Wpłacono (grosz)</FieldLabel>
-                      <Input type="number" value={paidAmountGrosz} onChange={(event) => setPaidAmountGrosz(Number(event.target.value))} />
+                      <FieldLabel>Wpłacono (zł)</FieldLabel>
+                      <Input type="number" value={paidAmountZloty} onChange={(event) => setPaidAmountZloty(Number(event.target.value))} />
                     </Field>
                     <Field>
                       <FieldLabel>Notatka rozliczenia</FieldLabel>
@@ -294,7 +306,7 @@ function AdminOrderDetailRoute() {
                     </Field>
                     <Button
                       disabled={updatePayment.isPending}
-                      onClick={() => updatePayment.mutate({ id: data.id, manualPaymentStatus: manualPaymentStatus as "not_required" | "unpaid" | "deposit_paid" | "paid", paidAmountGrosz, paymentNotes })}
+                      onClick={() => updatePayment.mutate({ id: data.id, manualPaymentStatus: manualPaymentStatus as "not_required" | "unpaid" | "deposit_paid" | "paid", paidAmountZloty, paymentNotes })}
                     >
                       <WalletCards data-icon="inline-start" />
                       Zapisz rozliczenie
@@ -303,7 +315,7 @@ function AdminOrderDetailRoute() {
                       <Mail data-icon="inline-start" />
                       Wyślij potwierdzenie
                     </Button>
-                    <Button variant="outline" render={<Link to="/rezerwacja/$publicToken" params={{ publicToken: data.publicToken }} />}>
+                    <Button variant="outline" render={<Link to="/reservation/$publicToken" params={{ publicToken: data.publicToken }} />}>
                       <Send data-icon="inline-start" />
                       Strona klienta
                     </Button>

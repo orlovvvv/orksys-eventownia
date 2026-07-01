@@ -4,7 +4,6 @@ import { Drawer, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger } from "
 import { cn } from "@orksys-eventownia/ui/lib/utils";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  CalendarCheck,
   CircleHelp,
   Cookie,
   FileText,
@@ -24,23 +23,21 @@ import { ModeToggle } from "./mode-toggle";
 import { useOrderCart } from "./order-cart-provider";
 
 const desktopLinks = [
-  { to: "/produkty", label: "Produkty" },
-  { to: "/wynajem", label: "Wynajem" },
+  { to: "/products", label: "Produkty" },
   { to: "/faq", label: "FAQ" },
-  { to: "/kontakt", label: "Kontakt" },
+  { to: "/contact", label: "Kontakt" },
 ] as const;
 
 const primaryMobileLinks = [
   { to: "/", label: "Strona główna", icon: Home },
-  { to: "/produkty", label: "Produkty", icon: Package },
-  { to: "/wynajem", label: "Wynajem", icon: CalendarCheck },
+  { to: "/products", label: "Produkty", icon: Package },
   { to: "/faq", label: "FAQ", icon: CircleHelp },
-  { to: "/kontakt", label: "Kontakt", icon: Phone },
+  { to: "/contact", label: "Kontakt", icon: Phone },
 ] as const;
 
 const secondaryMobileLinks = [
-  { to: "/regulamin", label: "Regulamin", icon: FileText },
-  { to: "/polityka-prywatnosci", label: "Prywatność", icon: ShieldCheck },
+  { to: "/terms", label: "Regulamin", icon: FileText },
+  { to: "/privacy-policy", label: "Prywatność", icon: ShieldCheck },
   { to: "/cookies", label: "Cookies", icon: Cookie },
 ] as const;
 
@@ -74,7 +71,7 @@ export default function SiteHeader() {
               size="icon"
               aria-label="Przejdź do koszyka"
               className="relative [&_svg:not([class*='size-'])]:size-[1.2rem]"
-              render={<Link to="/wynajem" search={{}} />}
+              render={<Link to="/cart" search={{}} />}
             >
               <ShoppingCart />
               <CartCountBadge itemCount={itemCount} pulsing={cartBadgePulsing} floating />
@@ -143,7 +140,7 @@ export default function SiteHeader() {
                 <div className="border-t border-border/70 p-4">
                   <Button
                     className="w-full justify-between"
-                    render={<Link to="/wynajem" search={{}} onClick={() => setMobileMenuOpen(false)} />}
+                    render={<Link to="/cart" search={{}} onClick={() => setMobileMenuOpen(false)} />}
                   >
                     <span className="inline-flex items-center gap-2">
                       <ShoppingCart data-icon="inline-start" />
@@ -168,7 +165,7 @@ export default function SiteHeader() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
-          <Button render={<Link to="/wynajem" search={{}} />}>
+          <Button render={<Link to="/cart" search={{}} />}>
             <ShoppingCart data-icon="inline-start" />
             Koszyk
             <CartCountBadge itemCount={itemCount} pulsing={cartBadgePulsing} />

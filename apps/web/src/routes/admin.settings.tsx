@@ -29,8 +29,6 @@ function AdminSettingsRoute() {
   const [publicPhone, setPublicPhone] = useState("");
   const [publicEmail, setPublicEmail] = useState("");
   const [serviceAreaDescription, setServiceAreaDescription] = useState("");
-  const [defaultBaseHours, setDefaultBaseHours] = useState(5);
-  const [defaultExtraHourPercent, setDefaultExtraHourPercent] = useState(20);
   const [bookingLeadTimeHours, setBookingLeadTimeHours] = useState(24);
   const [requestExpirationDays, setRequestExpirationDays] = useState(7);
   const updateSettings = useMutation(trpc.admin.settings.update.mutationOptions({ onSuccess: () => {
@@ -54,8 +52,6 @@ function AdminSettingsRoute() {
     setPublicPhone(data.publicPhone);
     setPublicEmail(data.publicEmail);
     setServiceAreaDescription(data.serviceAreaDescription);
-    setDefaultBaseHours(data.defaultBaseHours);
-    setDefaultExtraHourPercent(data.defaultExtraHourPercent);
     setBookingLeadTimeHours(data.bookingLeadTimeHours);
     setRequestExpirationDays(data.requestExpirationDays);
   }, [settings.data]);
@@ -93,14 +89,12 @@ function AdminSettingsRoute() {
           <CardContent>
             <FieldGroup>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field><FieldLabel>Godziny bazowe</FieldLabel><Input type="number" value={defaultBaseHours} onChange={(event) => setDefaultBaseHours(Number(event.target.value))} /></Field>
-                <Field><FieldLabel>Extra godzina (%)</FieldLabel><Input type="number" value={defaultExtraHourPercent} onChange={(event) => setDefaultExtraHourPercent(Number(event.target.value))} /></Field>
                 <Field><FieldLabel>Lead time (h)</FieldLabel><Input type="number" value={bookingLeadTimeHours} onChange={(event) => setBookingLeadTimeHours(Number(event.target.value))} /></Field>
                 <Field><FieldLabel>Ważność zapytania (dni)</FieldLabel><Input type="number" value={requestExpirationDays} onChange={(event) => setRequestExpirationDays(Number(event.target.value))} /></Field>
               </div>
               <Button
                 disabled={updateSettings.isPending}
-                onClick={() => updateSettings.mutate({ businessName, publicPhone, publicEmail, serviceAreaDescription, defaultBaseHours, defaultExtraHourPercent, bookingLeadTimeHours, requestExpirationDays })}
+                onClick={() => updateSettings.mutate({ businessName, publicPhone, publicEmail, serviceAreaDescription, bookingLeadTimeHours, requestExpirationDays })}
               >
                 <Save data-icon="inline-start" />
                 Zapisz ustawienia

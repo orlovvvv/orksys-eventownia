@@ -28,7 +28,7 @@ const productInput = z.object({
   namePl: z.string().optional(),
   shortDescriptionPl: z.string().optional(),
   longDescriptionPl: z.string().optional(),
-  productType: z.enum(["rental_product", "addon", "manual_quote_extra"]).optional(),
+  productType: z.enum(["rental_product", "addon", "event_extra"]).optional(),
   active: z.boolean().optional(),
   publicVisible: z.boolean().optional(),
   requiresPower: z.boolean().optional(),
@@ -85,7 +85,7 @@ export const adminRouter = router({
 
     detail: publicProcedure.input(z.object({ id: z.string() })).query(({ input }) => publicProduct(input.id)),
 
-    create: publicProcedure.input(productInput.required({ categoryId: true, sku: true, slug: true, namePl: true })).mutation(({ input }) => {
+    create: publicProcedure.input(productInput.required({ categoryId: true, sku: true, slug: true, namePl: true }).extend({ hourlyPriceZloty: z.number().int().min(0) })).mutation(({ input }) => {
       const state = getState();
       const now = nowIso();
       const product: Product = {
@@ -113,14 +113,11 @@ export const adminRouter = router({
       const priceRule: PriceRule = {
         id: makeId("price"),
         productId: product.id,
-        quoteMode: "manual",
-        unitMode: "manual_quote",
+        unitMode: "per_hour",
         currency: "PLN",
-        basePriceGrosz: null,
-        baseHours: null,
-        extraHourPercent: state.businessSettings.defaultExtraHourPercent,
-        depositMode: "none",
-        depositAmountGrosz: null,
+        hourlyPriceZloty: input.hourlyPriceZloty,
+        depositMode: "fixed",
+        depositAmountZloty: 300,
         depositPercent: null,
         active: true,
         createdAt: now,
@@ -182,11 +179,8 @@ export const adminRouter = router({
       .input(
         z.object({
           id: z.string(),
-          quoteMode: z.enum(["automatic", "manual"]),
-          basePriceGrosz: z.number().int().nullable(),
-          baseHours: z.number().nullable(),
-          extraHourPercent: z.number(),
-          depositAmountGrosz: z.number().int().nullable().optional(),
+          hourlyPriceZloty: z.number().int().min(0),
+          depositAmountZloty: z.number().int().nullable().optional(),
         }),
       )
       .mutation(({ input }) => {
@@ -194,15 +188,12 @@ export const adminRouter = router({
         const rule = state.priceRules.find((item) => item.productId === input.id && item.active);
         if (!rule) return null;
         const before = { ...rule };
-        rule.quoteMode = input.quoteMode;
-        rule.unitMode = input.quoteMode === "manual" ? "manual_quote" : "per_booking";
-        rule.basePriceGrosz = input.basePriceGrosz;
-        rule.baseHours = input.baseHours;
-        rule.extraHourPercent = input.extraHourPercent;
-        if (input.depositAmountGrosz !== undefined) {
-          rule.depositAmountGrosz = input.depositAmountGrosz;
+        rule.unitMode = "per_hour";
+        rule.hourlyPriceZloty = input.hourlyPriceZloty;
+        if (input.depositAmountZloty !== undefined) {
+          rule.depositAmountZloty = input.depositAmountZloty;
         }
-        rule.depositMode = rule.depositAmountGrosz ? "fixed" : "none";
+        rule.depositMode = rule.depositAmountZloty ? "fixed" : "none";
         rule.updatedAt = nowIso();
         appendAuditLog("product.pricing.update", "price_rule", rule.id, before, rule);
         return rule;
@@ -264,19 +255,19 @@ export const adminRouter = router({
       appendAuditLog("rental_request.update", "rental_request", request.id, before, request);
       return rentalRequestDetail(request.id);
     }),
-    addQuoteAdjustment: publicProcedure.input(z.object({ id: z.string(), travelFeeGrosz: z.number().int().min(0).optional(), discountGrosz: z.number().int().min(0).optional(), adminNotes: z.string().optional() })).mutation(({ input }) => {
+    addQuoteAdjustment: publicProcedure.input(z.object({ id: z.string(), travelFeeZloty: z.number().int().min(0).optional(), discountZloty: z.number().int().min(0).optional(), adminNotes: z.string().optional() })).mutation(({ input }) => {
       const request = getState().rentalRequests.find((item) => item.id === input.id);
       if (!request) return null;
       const before = { ...request };
-      if (input.travelFeeGrosz !== undefined) request.travelFeeGrosz = input.travelFeeGrosz;
-      if (input.discountGrosz !== undefined) request.discountGrosz = input.discountGrosz;
+      if (input.travelFeeZloty !== undefined) request.travelFeeZloty = input.travelFeeZloty;
+      if (input.discountZloty !== undefined) request.discountZloty = input.discountZloty;
       if (input.adminNotes !== undefined) request.adminNotes = input.adminNotes;
-      request.totalEstimateGrosz = request.subtotalGrosz + (request.travelFeeGrosz ?? 0) - request.discountGrosz;
+      request.totalEstimateZloty = request.subtotalZloty + (request.travelFeeZloty ?? 0) - request.discountZloty;
       request.updatedAt = nowIso();
       appendAuditLog("rental_request.quote_adjustment", "rental_request", request.id, before, request);
       return rentalRequestDetail(request.id);
     }),
-    confirm: publicProcedure.input(z.object({ id: z.string(), travelFeeGrosz: z.number().int().min(0), depositRequiredGrosz: z.number().int().min(0), adminNotes: z.string().optional() })).mutation(({ input }) => {
+    confirm: publicProcedure.input(z.object({ id: z.string(), travelFeeZloty: z.number().int().min(0), depositRequiredZloty: z.number().int().min(0), adminNotes: z.string().optional() })).mutation(({ input }) => {
       const booking = confirmRentalRequest(input.id, input);
       if (!booking) return null;
       appendAuditLog("rental_request.confirm", "rental_request", input.id, null, { booking });
@@ -304,18 +295,18 @@ export const adminRouter = router({
   bookings: router({
     list: publicProcedure.query(() => getState().bookings.map((item) => bookingDetail(item.id))),
     detail: publicProcedure.input(z.object({ id: z.string() })).query(({ input }) => bookingDetail(input.id)),
-    create: publicProcedure.input(z.object({ customerName: z.string(), phone: z.string(), productId: z.string(), date: z.string(), startTime: z.string(), durationHours: z.number(), totalGrosz: z.number().int() })).mutation(({ input }) => {
+    create: publicProcedure.input(z.object({ customerName: z.string(), phone: z.string(), productId: z.string(), date: z.string(), startTime: z.string(), durationHours: z.number().int().positive(), totalZloty: z.number().int() })).mutation(({ input }) => {
       const state = getState();
       const now = nowIso();
       const customer = { id: makeId("cust"), name: input.customerName, email: null, phone: input.phone, marketingConsent: false, anonymizedAt: null, createdAt: now, updatedAt: now };
-      const location = { id: makeId("loc"), customerId: customer.id, label: "Rezerwacja ręczna", street: "Adres do uzupełnienia", postalCode: "00-000", city: "Do potwierdzenia", country: "PL" as const, surfaceType: null, powerAvailable: null, accessNotes: null, createdAt: now, updatedAt: now };
+      const location = { id: makeId("loc"), customerId: customer.id, label: "Rezerwacja ręczna", street: "Ulica i numer do uzupełnienia", addressDetails: null, postalCode: "00-000", city: "Do potwierdzenia", country: "PL" as const, surfaceType: null, powerAvailable: null, accessNotes: null, createdAt: now, updatedAt: now };
       const eventStartAt = dateTimeIso(input.date, input.startTime);
       const eventEndAt = addHoursIso(eventStartAt, input.durationHours);
-      const booking: Booking = { id: makeId("book"), rentalRequestId: null, publicToken: makePublicToken("btok"), status: "confirmed", customerId: customer.id, locationId: location.id, eventStartAt, eventEndAt, setupStartAt: eventStartAt, teardownEndAt: eventEndAt, durationHours: input.durationHours, currency: "PLN", subtotalGrosz: input.totalGrosz, travelFeeGrosz: 0, discountGrosz: 0, totalGrosz: input.totalGrosz, manualPaymentStatus: "unpaid", depositRequiredGrosz: 0, paidAmountGrosz: 0, paymentNotes: null, paymentUpdatedAt: null, paymentUpdatedByAdminId: null, confirmedAt: now, expiresAt: null, adminNotes: "Manual/offline booking.", customerNotes: null, createdByAdminId: getMockAdmin()?.id ?? null, generatedContractId: null, createdAt: now, updatedAt: now };
+      const booking: Booking = { id: makeId("book"), rentalRequestId: null, publicToken: makePublicToken("btok"), status: "confirmed", customerId: customer.id, locationId: location.id, eventStartAt, eventEndAt, setupStartAt: eventStartAt, teardownEndAt: eventEndAt, durationHours: input.durationHours, currency: "PLN", subtotalZloty: input.totalZloty, travelFeeZloty: 0, discountZloty: 0, totalZloty: input.totalZloty, manualPaymentStatus: "unpaid", depositRequiredZloty: 0, paidAmountZloty: 0, paymentNotes: null, paymentUpdatedAt: null, paymentUpdatedByAdminId: null, confirmedAt: now, expiresAt: null, adminNotes: "Manual/offline booking.", customerNotes: null, createdByAdminId: getMockAdmin()?.id ?? null, generatedContractId: null, createdAt: now, updatedAt: now };
       state.customers.unshift(customer);
       state.locations.unshift(location);
       state.bookings.unshift(booking);
-      state.bookingItems.unshift({ id: makeId("bitem"), bookingId: booking.id, productId: input.productId, quantity: 1, unitPriceGrosz: input.totalGrosz, extraHours: 0, lineTotalGrosz: input.totalGrosz, createdAt: now, updatedAt: now });
+      state.bookingItems.unshift({ id: makeId("bitem"), bookingId: booking.id, productId: input.productId, quantity: 1, hourlyPriceZloty: input.durationHours > 0 ? Math.round(input.totalZloty / input.durationHours) : input.totalZloty, billableHours: input.durationHours, lineTotalZloty: input.totalZloty, createdAt: now, updatedAt: now });
       appendAuditLog("booking.create", "booking", booking.id, null, booking);
       return bookingDetail(booking.id);
     }),

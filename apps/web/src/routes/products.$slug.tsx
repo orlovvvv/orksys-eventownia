@@ -21,7 +21,7 @@ import {
 } from "@/lib/mock-images";
 import { trpc } from "@/utils/trpc";
 
-export const Route = createFileRoute("/produkty/$slug")({
+export const Route = createFileRoute("/products/$slug")({
   component: ProductDetailRoute,
 });
 
@@ -50,12 +50,7 @@ function ProductDetailRoute() {
     (products.data?.items ?? [])
       .flatMap((item) => (!item || item.productType === "rental_product" ? [] : [item]))
       .slice(0, 3);
-  const price =
-    productData.pricing?.quoteMode === "automatic" ? (
-      <Money amountGrosz={productData.pricing.basePriceGrosz} />
-    ) : (
-      "Wycena indywidualna"
-    );
+  const price = <><Money amountZloty={productData.pricing?.hourlyPriceZloty} />/h</>;
 
   return (
     <main className="mx-auto flex w-full max-w-page flex-col gap-12 px-4 py-10 md:px-6">
@@ -64,7 +59,7 @@ function ProductDetailRoute() {
           Strona główna
         </Link>
         <ChevronRight />
-        <Link to="/produkty">
+        <Link to="/products">
           Katalog
         </Link>
         <ChevronRight />
@@ -108,7 +103,6 @@ function ProductDetailRoute() {
             <h1 className="text-4xl font-bold leading-tight md:text-5xl">{productData.namePl}</h1>
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-bold text-primary">{price}</span>
-              {productData.pricing?.baseHours ? <span className="text-sm text-muted-foreground">/ {productData.pricing.baseHours}h</span> : null}
             </div>
             <p className="text-base/relaxed text-muted-foreground">{productData.longDescriptionPl}</p>
           </div>
@@ -133,7 +127,7 @@ function ProductDetailRoute() {
                 </Button>
               ) : (
                 <Button
-                  render={<Link to="/wynajem" search={{ date: rentalDate }} />}
+                  render={<Link to="/cart" search={{ date: rentalDate }} />}
                   onClick={() => addItem(productData.sku, 1, { maxQuantity })}
                 >
                   Sprawdź dostępność
@@ -194,7 +188,7 @@ function ProductDetailRoute() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-semibold">{addon.namePl}</div>
                     <div className="text-sm text-muted-foreground">
-                      {addon.pricing?.quoteMode === "automatic" ? <Money amountGrosz={addon.pricing.basePriceGrosz} /> : "Wycena indywidualna"}
+                      <Money amountZloty={addon.pricing?.hourlyPriceZloty} />/h
                     </div>
                   </div>
                   <AddToOrderButton iconOnly product={addon} />

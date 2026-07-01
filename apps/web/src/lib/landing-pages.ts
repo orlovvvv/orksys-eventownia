@@ -2,7 +2,7 @@ export const landingPages = [
   {
     path: "/dmuchance-na-urodziny",
     title: "Dmuchance na urodziny",
-    description: "Szybka ścieżka do zapytania o atrakcje urodzinowe z transparentną wyceną bazową.",
+    description: "Szybka ścieżka do zapytania o atrakcje urodzinowe z transparentną stawką godzinową.",
     categorySlug: "dmuchane-zjezdzalnie",
   },
   {
@@ -20,13 +20,13 @@ export const landingPages = [
   {
     path: "/dmuchane-zjezdzalnie-wynajem",
     title: "Dmuchane zjeżdżalnie wynajem",
-    description: "Katalog zjeżdżalni z ceną bazową 800 zł za 5 godzin plus dojazd do potwierdzenia.",
+    description: "Katalog zjeżdżalni ze stawkami godzinowymi i dojazdem do potwierdzenia.",
     categorySlug: "dmuchane-zjezdzalnie",
   },
   {
     path: "/dmuchane-place-zabaw-wynajem",
     title: "Dmuchane place zabaw wynajem",
-    description: "Place zabaw od 1000 zł za 5 godzin, z operacyjną weryfikacją terminu.",
+    description: "Place zabaw ze stawkami godzinowymi i operacyjną weryfikacją terminu.",
     categorySlug: "dmuchane-place-zabaw",
   },
   {
@@ -38,7 +38,7 @@ export const landingPages = [
   {
     path: "/maszyna-do-waty-cukrowej-wynajem",
     title: "Maszyna do waty cukrowej wynajem",
-    description: "Produkt gastronomiczny dostępny w makiecie jako pozycja do ręcznej wyceny.",
+    description: "Produkt gastronomiczny dostępny w makiecie ze stawką godzinową.",
     categorySlug: "maszyny-gastronomiczne",
   },
   {

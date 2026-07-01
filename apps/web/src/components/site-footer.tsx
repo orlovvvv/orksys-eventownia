@@ -20,11 +20,8 @@ export default function SiteFooter() {
         </div>
         <div className="flex flex-col gap-3">
           <div className="text-sm font-bold text-foreground">Oferta</div>
-          <Link to="/produkty" className="text-sm text-muted-foreground">
+          <Link to="/products" className="text-sm text-muted-foreground">
             Katalog
-          </Link>
-          <Link to="/wynajem" search={{}} className="text-sm text-muted-foreground">
-            Zapytanie
           </Link>
           <Link to="/faq" className="text-sm text-muted-foreground">
             FAQ
@@ -32,10 +29,10 @@ export default function SiteFooter() {
         </div>
         <div className="flex flex-col gap-3">
           <div className="text-sm font-bold text-foreground">Legal</div>
-          <Link to="/regulamin" className="text-sm text-muted-foreground">
+          <Link to="/terms" className="text-sm text-muted-foreground">
             Regulamin
           </Link>
-          <Link to="/polityka-prywatnosci" className="text-sm text-muted-foreground">
+          <Link to="/privacy-policy" className="text-sm text-muted-foreground">
             Prywatność
           </Link>
           <Link to="/cookies" className="text-sm text-muted-foreground">
@@ -44,7 +41,7 @@ export default function SiteFooter() {
         </div>
         <div className="flex flex-col gap-3">
           <div className="text-sm font-bold text-foreground">Kontakt</div>
-          <Link to="/kontakt" className="text-sm text-muted-foreground">
+          <Link to="/contact" className="text-sm text-muted-foreground">
             Formularz kontaktowy
           </Link>
           <span className="text-sm text-muted-foreground">Instagram</span>
