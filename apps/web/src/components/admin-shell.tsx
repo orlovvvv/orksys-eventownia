@@ -8,26 +8,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@orksys-eventownia/ui/components/dropdown-menu";
-import { Input } from "@orksys-eventownia/ui/components/input";
-import { Separator } from "@orksys-eventownia/ui/components/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@orksys-eventownia/ui/components/tooltip";
 import { cn } from "@orksys-eventownia/ui/lib/utils";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
   Gauge,
   Grid2X2,
   History,
   Home,
   Menu,
   Package,
-  Search,
   Settings,
   SlidersHorizontal,
   Tag,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
+import { AdminCommandSearch } from "@/components/admin-command-search";
 import { BrandLogo } from "@/components/brand-logo";
 import { initials } from "@/lib/admin-status";
 
@@ -73,112 +75,141 @@ const adminSections = [
   },
 ] as const;
 
+const sidebarStorageKey = "eventownia.admin.sidebarCollapsed";
+
 export function AdminShell({ title, description, eyebrow, actions = [], children }: AdminShellProps) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const adminName = "Mock Admin";
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(window.localStorage.getItem(sidebarStorageKey) === "true");
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((current) => {
+      const next = !current;
+      window.localStorage.setItem(sidebarStorageKey, String(next));
+      return next;
+    });
+  }
 
   return (
-    <div className="min-h-svh bg-background text-foreground lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="sticky top-0 hidden h-svh flex-col border-r border-border/70 bg-card lg:flex">
-        <div className="flex flex-col gap-4 p-6">
-          <Link to="/admin" className="min-w-0">
-            <BrandLogo imageClassName="h-12" nameClassName="text-xl" />
-          </Link>
-          <div>
-            <div className="text-sm font-semibold">Panel operatora</div>
-            <div className="text-xs text-muted-foreground">Mock admin bez logowania</div>
+    <TooltipProvider>
+      <div className={cn("min-h-svh bg-background text-foreground lg:grid", collapsed ? "lg:grid-cols-[68px_1fr]" : "lg:grid-cols-[240px_1fr]")}>
+        <aside className="sticky top-0 hidden h-svh flex-col border-r border-border/70 bg-card lg:flex">
+          <div className={cn("flex h-14 items-center border-b border-border/70 px-3", collapsed ? "justify-center" : "justify-between gap-3")}>
+            <Link to="/admin" className="min-w-0">
+              <BrandLogo
+                showLocation={!collapsed}
+                imageClassName={collapsed ? "h-9" : "h-9"}
+                nameClassName={collapsed ? "sr-only" : "text-base"}
+                locationClassName={collapsed ? "sr-only" : "text-xs"}
+              />
+            </Link>
+            {!collapsed ? (
+              <Button variant="ghost" size="icon-sm" onClick={toggleCollapsed} aria-label="Zwiń panel">
+                <ChevronLeft />
+              </Button>
+            ) : null}
           </div>
-        </div>
-        <Separator />
-        <nav className="flex flex-1 flex-col gap-6 overflow-y-auto p-4">
-          {adminSections.map((section) => (
-            <div key={section.label} className="flex flex-col gap-2">
-              <div className="px-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                {section.label}
-              </div>
-              <div className="flex flex-col gap-1">
-                {section.links.map((link) => (
-                  <AdminNavLink key={link.to} currentPath={pathname} {...link} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </nav>
-      </aside>
 
-      <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-          <div className="flex h-16 items-center gap-3 px-4 md:px-6">
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<Button variant="outline" size="icon" className="lg:hidden" />}>
-                <Menu />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-72">
-                <DropdownMenuLabel className="normal-case">
-                  <BrandLogo imageClassName="h-10" nameClassName="text-sm" locationClassName="text-[0.7rem]" />
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {adminSections.map((section) => (
-                  <DropdownMenuGroup key={section.label}>
-                    <DropdownMenuLabel>{section.label}</DropdownMenuLabel>
-                    {section.links.map((link) => (
-                      <DropdownMenuItem key={link.to} render={<Link to={link.to} />}>
-                        <link.icon data-icon="inline-start" />
-                        {link.label}
-                      </DropdownMenuItem>
-                    ))}
-                    <DropdownMenuSeparator />
-                  </DropdownMenuGroup>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <div className="relative hidden min-w-64 max-w-md flex-1 md:block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input className="h-10 rounded-full pl-10" placeholder="Szukaj..." />
-            </div>
-
-            <div className="ml-auto flex items-center gap-2">
-              <Button variant="ghost" size="icon" aria-label="Powiadomienia" className="relative">
-                <Bell />
-                <span className="absolute right-2 top-2 size-2 rounded-full bg-destructive" />
+          <nav className="flex flex-1 flex-col gap-5 overflow-y-auto p-3">
+            {collapsed ? (
+              <Button variant="ghost" size="icon-sm" onClick={toggleCollapsed} aria-label="Rozwiń panel" className="mx-auto">
+                <ChevronRight />
               </Button>
-              <Button variant="outline" render={<Link to="/" />} className="hidden md:inline-flex">
-                <Home data-icon="inline-start" />
-                Publiczna strona
-              </Button>
-              <div className="flex items-center gap-2 rounded-full bg-card px-2 py-1 shadow-soft ring-1 ring-white/70">
-                <div className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {initials(adminName)}
-                </div>
-                <div className="hidden pr-2 text-xs md:block">
-                  <div className="font-semibold">{adminName}</div>
-                  <div className="text-muted-foreground">owner</div>
+            ) : null}
+            {adminSections.map((section) => (
+              <div key={section.label} className="flex flex-col gap-1.5">
+                {!collapsed ? (
+                  <div className="px-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                    {section.label}
+                  </div>
+                ) : null}
+                <div className="flex flex-col gap-1">
+                  {section.links.map((link) => (
+                    <AdminNavLink key={link.to} currentPath={pathname} collapsed={collapsed} {...link} />
+                  ))}
                 </div>
               </div>
-            </div>
-          </div>
-        </header>
+            ))}
+          </nav>
 
-        <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-8 md:px-6 lg:py-10">
-          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div className="flex min-w-0 flex-col gap-2">
-              {eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.08em] text-primary">{eyebrow}</div> : null}
-              <h1 className="text-3xl font-bold leading-tight md:text-5xl">{title}</h1>
-              {description ? <p className="max-w-3xl text-base/relaxed text-muted-foreground">{description}</p> : null}
+          <div className={cn("border-t border-border/70 p-3", collapsed ? "flex justify-center" : "flex items-center gap-2")}>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
+              {initials(adminName)}
             </div>
-            {actions.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {actions.map((action) => (
-                  <AdminShellButton key={action.label} action={action} />
-                ))}
+            {!collapsed ? (
+              <div className="min-w-0 text-xs">
+                <div className="truncate font-semibold">{adminName}</div>
+                <div className="truncate text-muted-foreground">owner</div>
               </div>
             ) : null}
           </div>
-          {children}
-        </main>
+        </aside>
+
+        <div className="flex min-w-0 flex-col">
+          <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur">
+            <div className="flex h-14 items-center gap-2 px-4 md:px-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger render={<Button variant="outline" size="icon-sm" className="lg:hidden" />}>
+                  <Menu />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-72">
+                  <DropdownMenuLabel className="normal-case">
+                    <BrandLogo imageClassName="h-9" nameClassName="text-sm" locationClassName="text-[0.7rem]" />
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {adminSections.map((section) => (
+                    <DropdownMenuGroup key={section.label}>
+                      <DropdownMenuLabel>{section.label}</DropdownMenuLabel>
+                      {section.links.map((link) => (
+                        <DropdownMenuItem key={link.to} render={<Link to={link.to} />}>
+                          <link.icon data-icon="inline-start" />
+                          {link.label}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                    </DropdownMenuGroup>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <AdminCommandSearch />
+
+              <div className="ml-auto flex items-center gap-2">
+                <Button variant="ghost" size="icon-sm" aria-label="Powiadomienia">
+                  <Bell />
+                </Button>
+                <Button variant="outline" render={<Link to="/" />} className="hidden md:inline-flex">
+                  <Home data-icon="inline-start" />
+                  Publiczna strona
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          <main className="mx-auto flex w-full max-w-[1180px] flex-1 flex-col gap-5 px-4 py-4 md:px-6 md:py-6">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex min-w-0 flex-col gap-1">
+                {eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.08em] text-primary">{eyebrow}</div> : null}
+                <h1 className="text-xl font-semibold leading-tight md:text-2xl">{title}</h1>
+                {description ? <p className="max-w-3xl text-sm/relaxed text-muted-foreground">{description}</p> : null}
+              </div>
+              {actions.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {actions.map((action) => (
+                    <AdminShellButton key={action.label} action={action} />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
@@ -187,25 +218,37 @@ function AdminNavLink({
   label,
   icon: Icon,
   currentPath,
+  collapsed,
 }: {
   to: string;
   label: string;
   icon: LucideIcon;
   currentPath: string;
+  collapsed: boolean;
 }) {
   const isActive = to === "/admin" ? currentPath === to : currentPath.startsWith(to);
-
-  return (
+  const link = (
     <Link
       to={to}
+      aria-label={collapsed ? label : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
+        "flex h-9 items-center gap-2 rounded-md px-2 text-sm font-semibold transition-colors",
+        collapsed ? "justify-center" : "justify-start",
         isActive ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
       )}
     >
       <Icon data-icon="inline-start" />
-      {label}
+      {!collapsed ? <span className="truncate">{label}</span> : null}
     </Link>
+  );
+
+  if (!collapsed) return link;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span />}>{link}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
   );
 }
 

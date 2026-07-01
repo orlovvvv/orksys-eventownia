@@ -1,13 +1,23 @@
 import { Badge } from "@orksys-eventownia/ui/components/badge";
 import { Button } from "@orksys-eventownia/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@orksys-eventownia/ui/components/card";
 import { Checkbox } from "@orksys-eventownia/ui/components/checkbox";
-import { Separator } from "@orksys-eventownia/ui/components/separator";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@orksys-eventownia/ui/components/select";
+import { ToggleGroup, ToggleGroupItem } from "@orksys-eventownia/ui/components/toggle-group";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Filter, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { AdminDataToolbar } from "@/components/admin-data-toolbar";
+import { AdminEmptyState } from "@/components/admin-empty-state";
+import {
+  AdminSection,
+  AdminSectionActions,
+  AdminSectionContent,
+  AdminSectionDescription,
+  AdminSectionHeader,
+  AdminSectionTitle,
+} from "@/components/admin-section";
 import { AdminShell } from "@/components/admin-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { compactId, itemSummary } from "@/lib/admin-status";
@@ -66,161 +76,176 @@ function AdminCalendarRoute() {
       description="Miesięczny widok realizacji, blokad i prac serwisowych."
       actions={[{ label: "Zamówienia", icon: Plus, to: "/admin/orders" }]}
     >
-      <div className="grid gap-5 xl:grid-cols-[280px_1fr]">
-        <Card className="xl:sticky xl:top-20 xl:self-start">
-          <CardHeader>
-            <CardTitle>Filtry</CardTitle>
-            <CardDescription>Zawęź kalendarz do kategorii i statusów.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Kategorie</div>
-              <Button variant={categoryFilter === "all" ? "default" : "outline"} size="sm" onClick={() => setCategoryFilter("all")}>
-                Wszystkie
-              </Button>
-              {categories.map((category) => (
-                <Button
-                  key={category.slug}
-                  variant={categoryFilter === category.slug ? "default" : "outline"}
-                  size="sm"
-                  className="justify-start"
-                  onClick={() => setCategoryFilter(category.slug)}
-                >
-                  {category.namePl}
-                </Button>
-              ))}
-            </div>
-            <Separator />
-            <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Status</div>
-              <Button variant={statusFilter === "all" ? "secondary" : "outline"} size="sm" onClick={() => setStatusFilter("all")}>Wszystkie</Button>
-              <Button variant={statusFilter === "confirmed" ? "secondary" : "outline"} size="sm" onClick={() => setStatusFilter("confirmed")}>Potwierdzone</Button>
-              <Button variant={statusFilter === "completed" ? "secondary" : "outline"} size="sm" onClick={() => setStatusFilter("completed")}>Zakończone</Button>
-            </div>
-            <label className="flex items-center gap-3 rounded-xl bg-muted p-3 text-sm">
-              <Checkbox checked={showBlocks} onCheckedChange={(checked) => setShowBlocks(checked === true)} />
-              Pokaż blokady i serwis
-            </label>
-          </CardContent>
-        </Card>
+      <AdminDataToolbar
+        actions={
+          <label className="flex h-8 items-center gap-2 rounded-md border border-border/70 px-3 text-xs font-semibold">
+            <Checkbox checked={showBlocks} onCheckedChange={(checked) => setShowBlocks(checked === true)} />
+            Blokady
+          </label>
+        }
+      >
+        <Select
+          items={[{ value: "all", label: "Kategoria: Wszystkie" }, ...categories.map((category) => ({ value: category.slug, label: category.namePl }))]}
+          value={categoryFilter}
+          onValueChange={(value) => setCategoryFilter(String(value))}
+        >
+          <SelectTrigger size="sm" className="w-56"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="all">Kategoria: Wszystkie</SelectItem>
+              {categories.map((category) => <SelectItem key={category.slug} value={category.slug}>{category.namePl}</SelectItem>)}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <ToggleGroup value={[statusFilter]} onValueChange={(value) => value[0] ? setStatusFilter(String(value[0])) : undefined} spacing={1} className="flex-wrap">
+          <ToggleGroupItem value="all" variant="outline" size="sm">Wszystkie</ToggleGroupItem>
+          <ToggleGroupItem value="confirmed" variant="outline" size="sm">Potwierdzone</ToggleGroupItem>
+          <ToggleGroupItem value="completed" variant="outline" size="sm">Zakończone</ToggleGroupItem>
+        </ToggleGroup>
+      </AdminDataToolbar>
 
-        <div className="flex min-w-0 flex-col gap-5">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <CardTitle>{new Intl.DateTimeFormat("pl-PL", { month: "long", year: "numeric" }).format(visibleMonth)}</CardTitle>
-                  <CardDescription>{filteredBookings.length} rezerwacji · {filteredBlocks.length} blokad</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="icon" onClick={() => setVisibleMonth(addMonths(visibleMonth, -1))} aria-label="Poprzedni miesiąc">
-                    <ChevronLeft />
-                  </Button>
-                  <Button variant="outline" onClick={() => {
-                    const today = new Date();
-                    today.setDate(1);
-                    setVisibleMonth(today);
-                    setSelectedDay(toDateKey(new Date()));
-                  }}>
-                    Dzisiaj
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => setVisibleMonth(addMonths(visibleMonth, 1))} aria-label="Następny miesiąc">
-                    <ChevronRight />
-                  </Button>
-                </div>
+      <AdminSection>
+        <AdminSectionHeader>
+          <div>
+            <AdminSectionTitle>{new Intl.DateTimeFormat("pl-PL", { month: "long", year: "numeric" }).format(visibleMonth)}</AdminSectionTitle>
+            <AdminSectionDescription>{filteredBookings.length} rezerwacji · {filteredBlocks.length} blokad</AdminSectionDescription>
+          </div>
+          <AdminSectionActions>
+            <Button variant="outline" size="icon-sm" onClick={() => setVisibleMonth(addMonths(visibleMonth, -1))} aria-label="Poprzedni miesiąc">
+              <ChevronLeft />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => {
+              const today = new Date();
+              today.setDate(1);
+              setVisibleMonth(today);
+              setSelectedDay(toDateKey(new Date()));
+            }}>
+              Dzisiaj
+            </Button>
+            <Button variant="outline" size="icon-sm" onClick={() => setVisibleMonth(addMonths(visibleMonth, 1))} aria-label="Następny miesiąc">
+              <ChevronRight />
+            </Button>
+          </AdminSectionActions>
+        </AdminSectionHeader>
+        <AdminSectionContent>
+          <div className="hidden md:block">
+            <div className="overflow-hidden rounded-lg border border-border/70">
+              <div className="grid grid-cols-7 bg-muted">
+                {["Pon", "Wto", "Śro", "Czw", "Pią", "Sob", "Nie"].map((day) => (
+                  <div key={day} className="p-3 text-center text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">{day}</div>
+                ))}
               </div>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <div className="min-w-[760px] overflow-hidden rounded-2xl border border-border/70">
-                <div className="grid grid-cols-7 bg-muted">
-                  {["Pon", "Wto", "Śro", "Czw", "Pią", "Sob", "Nie"].map((day) => (
-                    <div key={day} className="p-3 text-center text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">{day}</div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 bg-border/70">
-                  {monthCells.map((cell, index) => {
-                    const cellBookings = filteredBookings.filter((booking) => toDateKey(new Date(booking.eventStartAt)) === cell.key);
-                    const cellBlocks = filteredBlocks.filter((block) => doesRangeOverlapDay(cell.key, block.startsAt, block.endsAt));
-                    const selected = selectedDay === cell.key;
-                    return (
-                      <button
-                        key={cell.key}
-                        type="button"
-                        onClick={() => setSelectedDay(cell.key)}
-                        className={[
-                          "min-h-32 bg-card p-2 text-left transition-colors hover:bg-muted/60",
-                          index === 35 ? "rounded-bl-2xl" : "",
-                          index === 41 ? "rounded-br-2xl" : "",
-                          selected ? "ring-2 ring-primary ring-inset" : "",
-                          cell.inMonth ? "" : "text-muted-foreground",
-                        ].join(" ")}
-                      >
-                        <div className="mb-2 flex items-center justify-between gap-2">
-                          <span className={cell.isToday ? "flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground" : "text-sm font-semibold"}>
-                            {cell.date.getDate()}
-                          </span>
-                          {cellBookings.length + cellBlocks.length > 2 ? <span className="text-xs text-muted-foreground">+{cellBookings.length + cellBlocks.length}</span> : null}
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          {cellBookings.slice(0, 2).map((booking) => (
-                            <div key={booking.id} className="truncate rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
-                              {booking.customer?.name ?? "Rezerwacja"}
-                            </div>
-                          ))}
-                          {cellBlocks.slice(0, 1).map((block) => (
-                            <div key={block.id} className="truncate rounded-md bg-destructive px-2 py-1 text-xs font-semibold text-destructive-foreground">
-                              {block.reasonType === "blackout" ? "Blokada" : "Serwis"}
-                            </div>
-                          ))}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="grid grid-cols-7 bg-border/70">
+                {monthCells.map((cell) => {
+                  const cellBookings = filteredBookings.filter((booking) => toDateKey(new Date(booking.eventStartAt)) === cell.key);
+                  const cellBlocks = filteredBlocks.filter((block) => doesRangeOverlapDay(cell.key, block.startsAt, block.endsAt));
+                  const selected = selectedDay === cell.key;
+                  return (
+                    <button
+                      key={cell.key}
+                      type="button"
+                      onClick={() => setSelectedDay(cell.key)}
+                      className={[
+                        "min-h-28 bg-card p-2 text-left transition-colors hover:bg-muted/60",
+                        selected ? "ring-2 ring-primary ring-inset" : "",
+                        cell.inMonth ? "" : "text-muted-foreground",
+                      ].join(" ")}
+                    >
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className={cell.isToday ? "flex size-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground" : "text-sm font-semibold"}>
+                          {cell.date.getDate()}
+                        </span>
+                        {cellBookings.length + cellBlocks.length > 2 ? <span className="text-xs text-muted-foreground">+{cellBookings.length + cellBlocks.length}</span> : null}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        {cellBookings.slice(0, 2).map((booking) => (
+                          <div key={booking.id} className="truncate rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
+                            {booking.customer?.name ?? "Rezerwacja"}
+                          </div>
+                        ))}
+                        {cellBlocks.slice(0, 1).map((block) => (
+                          <div key={block.id} className="truncate rounded-md bg-destructive px-2 py-1 text-xs font-semibold text-destructive-foreground">
+                            {block.reasonType === "blackout" ? "Blokada" : "Serwis"}
+                          </div>
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{formatDate(selectedDay)}</CardTitle>
-              <CardDescription>Rezerwacje i blokady w wybranym dniu.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2">
-              {selectedBookings.length === 0 && selectedBlocks.length === 0 ? (
-                <div className="rounded-xl bg-muted p-5 text-sm text-muted-foreground md:col-span-2">
-                  Brak zaplanowanych wpisów dla tego dnia.
-                </div>
-              ) : null}
-              {selectedBookings.map((booking) => (
-                <Link key={booking.id} to="/admin/orders/$id" params={{ id: booking.id }} className="rounded-xl border border-border/60 p-4 transition-colors hover:bg-muted/50">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold">{booking.customer?.name ?? "Rezerwacja"}</div>
-                      <div className="text-xs text-muted-foreground">{compactId(booking.id)} · {formatDateTime(booking.eventStartAt)}</div>
-                    </div>
-                    <StatusBadge status={booking.status} />
-                  </div>
-                  <div className="mt-3 text-sm text-muted-foreground">{itemSummary(booking.items)}</div>
-                </Link>
-              ))}
-              {selectedBlocks.map((block) => (
-                <div key={block.id} className="rounded-xl border border-border/60 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold">{block.product?.namePl ?? "Globalna blokada"}</div>
-                      <div className="text-xs text-muted-foreground">{formatDateTime(block.startsAt)} - {formatDateTime(block.endsAt)}</div>
-                    </div>
-                    <Badge variant="destructive"><Filter data-icon="inline-start" />{block.reasonType}</Badge>
-                  </div>
-                  <div className="mt-3 text-sm text-muted-foreground">{block.reason}</div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          <div className="grid gap-2 md:hidden">
+            {filteredBookings.length === 0 && filteredBlocks.length === 0 ? (
+              <AdminEmptyState icon={Filter} title="Brak wpisów" description="Nie ma rezerwacji ani blokad dla wybranych filtrów." />
+            ) : null}
+            {filteredBookings.slice(0, 20).map((booking) => (
+              <BookingRow key={booking.id} booking={booking} />
+            ))}
+            {filteredBlocks.slice(0, 20).map((block) => (
+              <BlockRow key={block.id} block={block} />
+            ))}
+          </div>
+        </AdminSectionContent>
+      </AdminSection>
+
+      <AdminSection>
+        <AdminSectionHeader>
+          <div>
+            <AdminSectionTitle>{formatDate(selectedDay)}</AdminSectionTitle>
+            <AdminSectionDescription>Rezerwacje i blokady w wybranym dniu.</AdminSectionDescription>
+          </div>
+        </AdminSectionHeader>
+        <AdminSectionContent className="grid gap-3 md:grid-cols-2">
+          {selectedBookings.length === 0 && selectedBlocks.length === 0 ? (
+            <div className="md:col-span-2">
+              <AdminEmptyState icon={Filter} title="Brak wpisów" description="Nie ma zaplanowanych wpisów dla tego dnia." />
+            </div>
+          ) : null}
+          {selectedBookings.map((booking) => <BookingRow key={booking.id} booking={booking} />)}
+          {selectedBlocks.map((block) => <BlockRow key={block.id} block={block} />)}
+        </AdminSectionContent>
+      </AdminSection>
     </AdminShell>
+  );
+}
+
+type CalendarBooking = {
+  id: string;
+  customer?: { name?: string | null } | null;
+  eventStartAt: string;
+  status: string;
+  items: Array<{ product?: { namePl: string } | null; quantity?: number }>;
+};
+
+function BookingRow({ booking }: { booking: CalendarBooking }) {
+  return (
+    <Link key={booking.id} to="/admin/orders/$id" params={{ id: booking.id }} className="rounded-lg border border-border/70 p-4 transition-colors hover:bg-muted/50">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-semibold">{booking.customer?.name ?? "Rezerwacja"}</div>
+          <div className="text-xs text-muted-foreground">{compactId(booking.id)} · {formatDateTime(booking.eventStartAt)}</div>
+        </div>
+        <StatusBadge status={booking.status} />
+      </div>
+      <div className="mt-3 text-sm text-muted-foreground">{itemSummary(booking.items)}</div>
+    </Link>
+  );
+}
+
+function BlockRow({ block }: { block: { id: string; startsAt: string; endsAt: string; reasonType: string; reason: string; product?: { namePl: string } | null } }) {
+  return (
+    <div key={block.id} className="rounded-lg border border-border/70 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-semibold">{block.product?.namePl ?? "Globalna blokada"}</div>
+          <div className="text-xs text-muted-foreground">{formatDateTime(block.startsAt)} - {formatDateTime(block.endsAt)}</div>
+        </div>
+        <Badge variant="destructive"><Filter data-icon="inline-start" />{block.reasonType}</Badge>
+      </div>
+      <div className="mt-3 text-sm text-muted-foreground">{block.reason}</div>
+    </div>
   );
 }
 

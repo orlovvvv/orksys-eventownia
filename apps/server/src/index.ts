@@ -7,6 +7,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
+import { ensureSuperAdmin } from "./seed-superadmin";
+
 const app = new Hono();
 
 app.use(logger());
@@ -19,6 +21,11 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use("*", async (_c, next) => {
+  await ensureSuperAdmin();
+  await next();
+});
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => createAuth().handler(c.req.raw));
 

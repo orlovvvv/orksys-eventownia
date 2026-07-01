@@ -27,7 +27,7 @@ function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
     <fieldset
       data-slot="field-set"
-      className={cn("flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-soft ring-1 ring-white/70 dark:ring-white/10", className)}
+      className={cn("flex flex-col gap-4 rounded-lg border border-border/70 bg-card p-5", className)}
       {...props}
     />
   );

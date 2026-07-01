@@ -1,5 +1,4 @@
 import { Button } from "@orksys-eventownia/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@orksys-eventownia/ui/components/card";
 import { Field, FieldGroup, FieldLabel } from "@orksys-eventownia/ui/components/field";
 import { Input } from "@orksys-eventownia/ui/components/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@orksys-eventownia/ui/components/select";
@@ -10,7 +9,15 @@ import { CalendarX, PackageX, ShieldAlert, Wrench } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { AdminKpiCard } from "@/components/admin-kpi-card";
+import { AdminEmptyState } from "@/components/admin-empty-state";
+import { AdminMetricStrip } from "@/components/admin-metric-strip";
+import {
+  AdminSection,
+  AdminSectionContent,
+  AdminSectionDescription,
+  AdminSectionHeader,
+  AdminSectionTitle,
+} from "@/components/admin-section";
 import { AdminShell } from "@/components/admin-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { compactId, itemSummary } from "@/lib/admin-status";
@@ -77,44 +84,58 @@ function AdminAvailabilityRoute() {
   }
 
   return (
-    <AdminShell title="Dostępność" description="Zarządzaj blackoutami, serwisem i blokadami konkretnych atrakcji.">
-      <div className="grid gap-4 md:grid-cols-3">
-        <AdminKpiCard label="Globalne" value={allBlocks.filter((block) => !block.productId).length} detail="Dla całej firmy" icon={CalendarX} tone="warning" />
-        <AdminKpiCard label="Produktowe" value={allBlocks.filter((block) => block.productId).length} detail="Dla atrakcji" icon={PackageX} tone="neutral" />
-        <AdminKpiCard label="Nadchodzące" value={upcomingBlocks.length} detail="Aktywne lub przyszłe" icon={ShieldAlert} tone="primary" />
-      </div>
+    <AdminShell title="Dostępność" description="Blackouty, serwis i blokady konkretnych atrakcji.">
+      <AdminMetricStrip
+        metrics={[
+          { label: "Globalne", value: allBlocks.filter((block) => !block.productId).length, detail: "Dla całej firmy", icon: CalendarX, tone: "warning" },
+          { label: "Produktowe", value: allBlocks.filter((block) => block.productId).length, detail: "Dla atrakcji", icon: PackageX },
+          { label: "Nadchodzące", value: upcomingBlocks.length, detail: "Aktywne lub przyszłe", icon: ShieldAlert, tone: "primary" },
+        ]}
+        className="xl:grid-cols-3"
+      />
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Blokady i serwis</CardTitle>
-            <CardDescription>Wpisy, które wpływają na kalendarz rezerwacji.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Produkt</TableHead><TableHead>Typ</TableHead><TableHead>Od</TableHead><TableHead>Do</TableHead><TableHead>Powód</TableHead><TableHead /></TableRow></TableHeader>
-              <TableBody>
-                {allBlocks.map((block) => (
-                  <TableRow key={block.id}>
-                    <TableCell className="font-semibold">{compactId(block.id)}</TableCell>
-                    <TableCell>{block.product?.namePl ?? "Globalnie"}</TableCell>
-                    <TableCell><StatusBadge status={block.reasonType} /></TableCell>
-                    <TableCell>{formatDateTime(block.startsAt)}</TableCell>
-                    <TableCell>{formatDateTime(block.endsAt)}</TableCell>
-                    <TableCell className="max-w-72 whitespace-normal">{block.reason}</TableCell>
-                    <TableCell><Button variant="destructive" size="sm" disabled={deleteBlock.isPending} onClick={() => deleteBlock.mutate({ id: block.id })}>Usuń</Button></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Nowa blokada</CardTitle>
-            <CardDescription>Sprawdź wpływ przed dodaniem wpisu.</CardDescription>
-          </CardHeader>
-          <CardContent>
+      <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
+        <AdminSection>
+          <AdminSectionHeader>
+            <div>
+              <AdminSectionTitle>Blokady i serwis</AdminSectionTitle>
+              <AdminSectionDescription>Wpisy, które wpływają na kalendarz rezerwacji.</AdminSectionDescription>
+            </div>
+          </AdminSectionHeader>
+          <AdminSectionContent className="p-0">
+            {allBlocks.length === 0 ? (
+              <div className="p-4">
+                <AdminEmptyState icon={CalendarX} title="Brak blokad" description="Nie ma wpisów blokujących dostępność." />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Produkt</TableHead><TableHead>Typ</TableHead><TableHead>Od</TableHead><TableHead>Do</TableHead><TableHead>Powód</TableHead><TableHead /></TableRow></TableHeader>
+                <TableBody>
+                  {allBlocks.map((block) => (
+                    <TableRow key={block.id}>
+                      <TableCell className="font-semibold">{compactId(block.id)}</TableCell>
+                      <TableCell>{block.product?.namePl ?? "Globalnie"}</TableCell>
+                      <TableCell><StatusBadge status={block.reasonType} /></TableCell>
+                      <TableCell>{formatDateTime(block.startsAt)}</TableCell>
+                      <TableCell>{formatDateTime(block.endsAt)}</TableCell>
+                      <TableCell className="max-w-72 whitespace-normal">{block.reason}</TableCell>
+                      <TableCell className="text-right"><Button variant="destructive" size="sm" disabled={deleteBlock.isPending} onClick={() => deleteBlock.mutate({ id: block.id })}>Usuń</Button></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </AdminSectionContent>
+        </AdminSection>
+
+        <AdminSection className="xl:sticky xl:top-20 xl:self-start">
+          <AdminSectionHeader>
+            <div>
+              <AdminSectionTitle>Nowa blokada</AdminSectionTitle>
+              <AdminSectionDescription>Sprawdź wpływ przed dodaniem wpisu.</AdminSectionDescription>
+            </div>
+          </AdminSectionHeader>
+          <AdminSectionContent>
             <FieldGroup>
               <Field>
                 <FieldLabel>Produkt</FieldLabel>
@@ -137,25 +158,32 @@ function AdminAvailabilityRoute() {
                 <Wrench data-icon="inline-start" />
                 Dodaj blokadę
               </Button>
-              <div className="rounded-xl bg-muted p-4">
-                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Wpływ na rezerwacje</div>
-                {impactedBookings.length === 0 ? (
-                  <p className="mt-2 text-sm text-muted-foreground">Brak kolizji z obecnymi rezerwacjami.</p>
-                ) : (
-                  <div className="mt-3 flex flex-col gap-2">
-                    {impactedBookings.map((booking) => (
-                      <div key={booking.id} className="rounded-lg bg-card p-3 text-sm">
-                        <div className="font-semibold">{booking.customer?.name}</div>
-                        <div className="text-xs text-muted-foreground">{formatDateTime(booking.eventStartAt)} · {itemSummary(booking.items)}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </FieldGroup>
-          </CardContent>
-        </Card>
+          </AdminSectionContent>
+        </AdminSection>
       </div>
+
+      <AdminSection>
+        <AdminSectionHeader>
+          <div>
+            <AdminSectionTitle>Wpływ projektowanej blokady</AdminSectionTitle>
+            <AdminSectionDescription>Rezerwacje kolidujące z aktualnie wybranym zakresem.</AdminSectionDescription>
+          </div>
+        </AdminSectionHeader>
+        <AdminSectionContent className="grid gap-2 md:grid-cols-2">
+          {impactedBookings.length === 0 ? (
+            <div className="md:col-span-2">
+              <AdminEmptyState icon={ShieldAlert} title="Brak kolizji" description="Wybrana blokada nie koliduje z obecnymi rezerwacjami." />
+            </div>
+          ) : null}
+          {impactedBookings.map((booking) => (
+            <div key={booking.id} className="rounded-lg border border-border/70 p-3 text-sm">
+              <div className="font-semibold">{booking.customer?.name}</div>
+              <div className="text-xs text-muted-foreground">{formatDateTime(booking.eventStartAt)} · {itemSummary(booking.items)}</div>
+            </div>
+          ))}
+        </AdminSectionContent>
+      </AdminSection>
     </AdminShell>
   );
 }

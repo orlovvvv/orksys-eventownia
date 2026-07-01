@@ -1,19 +1,35 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
+import { LoginForm } from "@/components/login-form";
+import { authClient } from "@/lib/auth-client";
+
+type LoginSearch = {
+  redirect?: string;
+};
 
 export const Route = createFileRoute("/login")({
-  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): LoginSearch => {
+    const redirectTo = typeof search.redirect === "string" && search.redirect.startsWith("/admin") ? search.redirect : undefined;
+    return redirectTo ? { redirect: redirectTo } : {};
+  },
+  beforeLoad: async ({ search }) => {
+    const session = await authClient.getSession();
+    if (session.data && search.redirect) {
+      redirect({ to: search.redirect, throw: true });
+    }
+    if (session.data && !search.redirect) {
+      redirect({ to: "/admin", throw: true });
+    }
+  },
+  component: LoginRoute,
 });
 
-function RouteComponent() {
-  const [showSignIn, setShowSignIn] = useState(false);
+function LoginRoute() {
+  const search = Route.useSearch();
 
-  return showSignIn ? (
-    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-  ) : (
-    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+  return (
+    <main className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-page items-center justify-center px-4 py-10 md:px-6">
+      <LoginForm className="w-full max-w-sm" redirectTo={search.redirect ?? "/admin"} />
+    </main>
   );
 }
