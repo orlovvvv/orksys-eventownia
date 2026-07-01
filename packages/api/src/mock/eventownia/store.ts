@@ -1,5 +1,5 @@
 import { createInitialState } from "./seed";
-import type { AnalyticsEvent, MockState } from "./types";
+import type { AnalyticsEvent, Currency, MockState, ProductPricing, PublicProduct } from "./types";
 import { makeId, nowIso } from "./ids";
 
 const state = createInitialState();
@@ -31,22 +31,78 @@ export function recordAnalytics(
 }
 
 export function findProductBySkuOrId(productKey: string) {
-  return state.products.find((product) => product.sku === productKey || product.id === productKey);
+  const variant = findVariantForProductKey(productKey);
+  if (variant) return state.products.find((product) => product.id === variant.productId);
+  return state.products.find((product) => product.id === productKey);
 }
 
-export function findPriceRule(productId: string) {
-  return state.priceRules.find((rule) => rule.productId === productId && rule.active);
+export function findProductById(productId: string) {
+  return state.products.find((product) => product.id === productId);
 }
 
-export function publicProduct(productId: string) {
+export function findDefaultVariant(productId: string) {
+  return state.productVariants.find((variant) => variant.productId === productId && variant.isDefault && variant.active) ?? null;
+}
+
+export function findVariantBySkuOrId(key: string) {
+  return state.productVariants.find((variant) => variant.id === key || variant.sku === key) ?? null;
+}
+
+export function findVariantForProductKey(key: string) {
+  return findVariantBySkuOrId(key) ?? findDefaultVariant(key);
+}
+
+export function findPriceSetForVariant(variantId: string) {
+  return state.priceSets.find((priceSet) => priceSet.variantId === variantId && priceSet.active) ?? null;
+}
+
+export function findActiveHourlyPrice(priceSetId: string, currency: Currency = "PLN") {
+  return state.prices.find((price) => price.priceSetId === priceSetId && price.currency === currency && price.unitMode === "per_hour" && price.active) ?? null;
+}
+
+export function resolveProductPricing(productId: string): {
+  variant: ReturnType<typeof findDefaultVariant>;
+  priceSet: ReturnType<typeof findPriceSetForVariant>;
+  price: ReturnType<typeof findActiveHourlyPrice>;
+  pricing: ProductPricing | null;
+} {
+  const variant = findDefaultVariant(productId);
+  const priceSet = variant ? findPriceSetForVariant(variant.id) : null;
+  const price = priceSet ? findActiveHourlyPrice(priceSet.id) : null;
+  const pricing: ProductPricing | null = priceSet && price
+    ? {
+      priceSetId: priceSet.id,
+      priceId: price.id,
+      currency: price.currency,
+      unitMode: price.unitMode,
+      hourlyPriceZloty: price.amountZloty,
+      depositMode: priceSet.depositMode,
+      depositAmountZloty: priceSet.depositAmountZloty,
+      depositPercent: priceSet.depositPercent,
+    }
+    : null;
+
+  return { variant, priceSet, price, pricing };
+}
+
+export function publicProduct(productId: string): PublicProduct | null {
   const product = state.products.find((item) => item.id === productId);
   if (!product) return null;
   const category = state.categories.find((item) => item.id === product.categoryId) ?? null;
-  const pricing = findPriceRule(product.id) ?? null;
+  const { variant, pricing } = resolveProductPricing(product.id);
   const assets = state.productAssets
     .filter((asset) => asset.productId === product.id)
     .sort((a, b) => a.sortOrder - b.sortOrder);
-  return { ...product, category, pricing, assets, supplierUrl: undefined };
+  return {
+    ...product,
+    sku: variant?.sku ?? product.id,
+    inventoryCount: variant?.inventoryCount ?? 0,
+    defaultVariant: variant,
+    category,
+    pricing,
+    assets,
+    supplierUrl: undefined,
+  };
 }
 
 export function rentalRequestDetail(idOrToken: string) {

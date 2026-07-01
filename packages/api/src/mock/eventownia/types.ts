@@ -43,7 +43,6 @@ export type Category = {
 export type Product = {
   id: string;
   categoryId: string;
-  sku: string;
   slug: string;
   namePl: string;
   shortDescriptionPl: string;
@@ -57,9 +56,21 @@ export type Product = {
   setupMinutes: number;
   teardownMinutes: number;
   cleaningBufferMinutes: number;
-  inventoryCount: number;
   sortOrder: number;
   visualTone: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProductVariant = {
+  id: string;
+  productId: string;
+  sku: string;
+  title: string;
+  isDefault: boolean;
+  active: boolean;
+  inventoryCount: number;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -79,18 +90,47 @@ export type ProductAsset = {
   updatedAt: string;
 };
 
-export type PriceRule = {
+export type PriceSet = {
   id: string;
-  productId: string;
-  unitMode: "per_hour";
-  currency: Currency;
-  hourlyPriceZloty: number;
+  variantId: string;
   depositMode: "none" | "fixed" | "percent";
   depositAmountZloty: number | null;
   depositPercent: number | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type Price = {
+  id: string;
+  priceSetId: string;
+  currency: Currency;
+  unitMode: "per_hour";
+  amountZloty: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProductPricing = {
+  priceSetId: string;
+  priceId: string;
+  currency: Currency;
+  unitMode: "per_hour";
+  hourlyPriceZloty: number;
+  depositMode: "none" | "fixed" | "percent";
+  depositAmountZloty: number | null;
+  depositPercent: number | null;
+};
+
+export type PublicProduct = Product & {
+  sku: string;
+  inventoryCount: number;
+  defaultVariant: ProductVariant | null;
+  category: Category | null;
+  pricing: ProductPricing | null;
+  assets: ProductAsset[];
+  supplierUrl?: undefined;
 };
 
 export type Customer = {
@@ -121,6 +161,7 @@ export type Location = {
 };
 
 export type QuoteLine = {
+  variantId: string | null;
   sku: string;
   productId: string;
   name: string;
@@ -132,6 +173,7 @@ export type QuoteLine = {
 };
 
 export type EstimateSummaryLine = {
+  variantId: string | null;
   productId: string;
   sku: string;
   name: string;
@@ -149,13 +191,14 @@ export type EstimateSummary = {
   itemsSubtotalZloty: number;
   travel: {
     mode: "manual_distance";
-    amountZloty: null;
+    amountZloty: number | null;
     label: string;
     message: string;
   };
+  discountZloty: number;
   finalQuote: {
-    status: "pending_manual_distance";
-    totalZloty: null;
+    status: "pending_manual_distance" | "finalized";
+    totalZloty: number | null;
     message: string;
   };
 };
@@ -187,6 +230,7 @@ export type Quote = {
 export type RentalRequestItem = {
   id: string;
   rentalRequestId: string;
+  variantId: string | null;
   productId: string;
   quantity: number;
   hourlyPriceZloty: number | null;
@@ -224,6 +268,7 @@ export type RentalRequest = {
 export type BookingItem = {
   id: string;
   bookingId: string;
+  variantId: string | null;
   productId: string;
   quantity: number;
   hourlyPriceZloty: number;
@@ -374,8 +419,10 @@ export type AnalyticsEvent = {
 export type MockState = {
   categories: Category[];
   products: Product[];
+  productVariants: ProductVariant[];
   productAssets: ProductAsset[];
-  priceRules: PriceRule[];
+  priceSets: PriceSet[];
+  prices: Price[];
   customers: Customer[];
   locations: Location[];
   quotes: Quote[];

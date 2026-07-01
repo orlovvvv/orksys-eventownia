@@ -46,9 +46,31 @@ export function EstimateSummaryView({
 
         <div className="flex flex-col gap-2 rounded-xl border border-border/70 p-4 text-sm">
           <div className="font-semibold">{summary.travel.label}</div>
+          {summary.travel.amountZloty !== null ? (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-muted-foreground">Dojazd</span>
+              <span className="font-semibold"><Money amountZloty={summary.travel.amountZloty} /></span>
+            </div>
+          ) : null}
+          {summary.discountZloty > 0 ? (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-muted-foreground">Rabat</span>
+              <span className="font-semibold">-<Money amountZloty={summary.discountZloty} /></span>
+            </div>
+          ) : null}
           <p className="text-muted-foreground">{summary.travel.message}</p>
           <p className="text-muted-foreground">{summary.finalQuote.message}</p>
         </div>
+        {summary.finalQuote.totalZloty !== null ? (
+          <div className="rounded-xl bg-primary p-4 text-primary-foreground">
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-sm font-semibold">Razem</div>
+              <div className="text-xl font-bold">
+                <Money amountZloty={summary.finalQuote.totalZloty} />
+              </div>
+            </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

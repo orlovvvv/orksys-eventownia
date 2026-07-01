@@ -7,7 +7,7 @@ import { appendAuditLog } from "../mock/eventownia/audit";
 import { cancelBooking, completeBooking, confirmRentalRequest, declineRentalRequest } from "../mock/eventownia/booking";
 import { dateTimeIso, makeId, makePublicToken, nowIso } from "../mock/eventownia/ids";
 import { createNotification } from "../mock/eventownia/notifications";
-import { buildEstimateSummary, calculateQuote } from "../mock/eventownia/pricing";
+import { buildEstimateSummary, buildFinalizedEstimateSummary, calculateQuote } from "../mock/eventownia/pricing";
 import {
   bookingDetail,
   findProductBySkuOrId,
@@ -90,6 +90,7 @@ function normalizeRequest(idOrToken: string) {
     durationHours: request.durationHours,
     lines: request.items.map(
       (item): EstimateSummaryLine => ({
+        variantId: item.variantId,
         productId: item.productId,
         sku: item.product?.sku ?? item.productId,
         name: item.product?.namePl ?? "Pozycja",
@@ -140,11 +141,12 @@ function normalizeRequest(idOrToken: string) {
 function normalizeBooking(idOrToken: string) {
   const booking = bookingDetail(idOrToken);
   if (!booking) return null;
-  const estimateSummary = buildEstimateSummary({
+  const estimateSummary = buildFinalizedEstimateSummary({
     currency: "PLN",
     durationHours: booking.durationHours,
     lines: booking.items.map(
       (item): EstimateSummaryLine => ({
+        variantId: item.variantId,
         productId: item.productId,
         sku: item.product?.sku ?? item.productId,
         name: item.product?.namePl ?? "Pozycja",
@@ -155,6 +157,9 @@ function normalizeBooking(idOrToken: string) {
         pricingStatus: "priced",
       }),
     ),
+    travelFeeZloty: booking.travelFeeZloty,
+    discountZloty: booking.discountZloty,
+    totalZloty: booking.totalZloty,
   });
   return {
     kind: "booking" as const,
@@ -314,7 +319,8 @@ export const ordersRouter = router({
         return {
           id: makeId("rritem"),
           rentalRequestId: request.id,
-          productId: product?.id ?? item.productId,
+          variantId: line?.variantId ?? null,
+          productId: line?.productId ?? product?.id ?? item.productId,
           quantity: item.quantity,
           hourlyPriceZloty: line?.hourlyPriceZloty ?? null,
           billableHours: line?.billableHours ?? input.event.durationHours,

@@ -34,17 +34,17 @@ export const catalogRouter = router({
         .filter((product) => product.publicVisible)
         .filter((product) => (input?.active === false ? true : product.active))
         .filter((product) => (category ? product.categoryId === category.id : true))
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((product) => publicProduct(product.id))
         .filter((product) =>
-          query
+          product && query
             ? [product.namePl, product.shortDescriptionPl, product.sku]
                 .join(" ")
                 .toLowerCase()
                 .includes(query)
             : true,
         )
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .slice(0, limit)
-        .map((product) => publicProduct(product.id));
+        .slice(0, limit);
 
       return {
         items,

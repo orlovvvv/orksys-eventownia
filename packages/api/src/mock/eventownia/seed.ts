@@ -8,9 +8,11 @@ import type {
   FeatureFlag,
   LegalDocument,
   MockState,
-  PriceRule,
+  Price,
+  PriceSet,
   Product,
   ProductAsset,
+  ProductVariant,
 } from "./types";
 
 const createdAt = "2026-06-01T10:00:00.000Z";
@@ -103,7 +105,6 @@ const products: Product[] = productInput.map(
   ([id, categoryId, sku, slug, namePl, shortDescriptionPl, productType, visualTone], index) => ({
     id,
     categoryId,
-    sku,
     slug,
     namePl,
     shortDescriptionPl,
@@ -117,7 +118,6 @@ const products: Product[] = productInput.map(
     setupMinutes: categoryId === "cat_tents" ? 90 : 45,
     teardownMinutes: categoryId === "cat_tents" ? 90 : 45,
     cleaningBufferMinutes: productType === "addon" ? 15 : 30,
-    inventoryCount: productType === "addon" ? 8 : 1,
     sortOrder: (index + 1) * 10,
     visualTone,
     createdAt,
@@ -125,30 +125,56 @@ const products: Product[] = productInput.map(
   }),
 );
 
-const hourlyPrice = (productId: string, hourlyPriceZloty: number): PriceRule => ({
-  id: `price_${productId}`,
-  productId,
-  unitMode: "per_hour",
-  currency: "PLN",
-  hourlyPriceZloty,
+const productVariants: ProductVariant[] = productInput.map(
+  ([productId, , sku, , , , productType], index) => ({
+    id: `variant_${productId}`,
+    productId,
+    sku,
+    title: "Default",
+    isDefault: true,
+    active: true,
+    inventoryCount: productType === "addon" ? 8 : 1,
+    sortOrder: (index + 1) * 10,
+    createdAt,
+    updatedAt: createdAt,
+  }),
+);
+
+const hourlyAmountForProduct = (product: Product, variant: ProductVariant) => {
+  if (product.categoryId === "cat_slides") return 800;
+  if (product.categoryId === "cat_playgrounds") return 1000;
+  if (product.categoryId === "cat_tracks") return 500;
+  if (product.categoryId === "cat_tents") return 1500;
+  if (product.categoryId === "cat_machines") return 500;
+  if (variant.sku === "ADDON_ZORB_TPU") return 300;
+  if (variant.sku === "ADDON_BUMPER_BALL_TPU") return 100;
+  if (product.productType === "event_extra") return 100;
+  return 1000;
+};
+
+const priceSets: PriceSet[] = productVariants.map((variant) => ({
+  id: `pset_${variant.id}`,
+  variantId: variant.id,
   depositMode: "fixed",
   depositAmountZloty: 300,
   depositPercent: null,
   active: true,
   createdAt,
   updatedAt: createdAt,
-});
+}));
 
-const priceRules: PriceRule[] = products.map((product) => {
-  if (product.categoryId === "cat_slides") return hourlyPrice(product.id, 800);
-  if (product.categoryId === "cat_playgrounds") return hourlyPrice(product.id, 1000);
-  if (product.categoryId === "cat_tracks") return hourlyPrice(product.id, 500);
-  if (product.categoryId === "cat_tents") return hourlyPrice(product.id, 1500);
-  if (product.categoryId === "cat_machines") return hourlyPrice(product.id, 500);
-  if (product.sku === "ADDON_ZORB_TPU") return hourlyPrice(product.id, 300);
-  if (product.sku === "ADDON_BUMPER_BALL_TPU") return hourlyPrice(product.id, 100);
-  if (product.productType === "event_extra") return hourlyPrice(product.id, 100);
-  return hourlyPrice(product.id, 1000);
+const prices: Price[] = productVariants.map((variant) => {
+  const product = products.find((item) => item.id === variant.productId);
+  return {
+    id: `price_${variant.id}`,
+    priceSetId: `pset_${variant.id}`,
+    currency: "PLN",
+    unitMode: "per_hour",
+    amountZloty: product ? hourlyAmountForProduct(product, variant) : 1000,
+    active: true,
+    createdAt,
+    updatedAt: createdAt,
+  };
 });
 
 const productAssets: ProductAsset[] = products.map((product) => ({
@@ -230,6 +256,7 @@ const bookingItems: BookingItem[] = [
   {
     id: "book_item_demo_paid",
     bookingId: "book_demo_paid",
+    variantId: "variant_prod_play_morski",
     productId: "prod_play_morski",
     quantity: 1,
     hourlyPriceZloty: 1000,
@@ -319,8 +346,10 @@ export function createInitialState(): MockState {
   return {
     categories: structuredClone(categories),
     products: structuredClone(products),
+    productVariants: structuredClone(productVariants),
     productAssets: structuredClone(productAssets),
-    priceRules: structuredClone(priceRules),
+    priceSets: structuredClone(priceSets),
+    prices: structuredClone(prices),
     customers: [
       {
         id: "cust_demo_company",

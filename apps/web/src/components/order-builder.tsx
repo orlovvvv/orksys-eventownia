@@ -23,7 +23,7 @@ import { TimePicker } from "@orksys-eventownia/ui/components/time-picker";
 import { useForm, useStore, type ReactFormExtendedApi } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import type { Category, EstimateSummary, PriceRule, Product, ProductAsset } from "@orksys-eventownia/api/mock/eventownia/types";
+import type { EstimateSummary, PublicProduct } from "@orksys-eventownia/api/mock/eventownia/types";
 import { ArrowLeft, CalendarCheck, CheckCircle2, Minus, PackageOpen, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { toast } from "sonner";
@@ -41,11 +41,7 @@ type CartSearch = {
   date?: string;
 };
 
-type CatalogProduct = Product & {
-  assets: ProductAsset[];
-  category: Category | null;
-  pricing: PriceRule | null;
-};
+type CatalogProduct = PublicProduct;
 
 type CartRow = {
   sku: string;

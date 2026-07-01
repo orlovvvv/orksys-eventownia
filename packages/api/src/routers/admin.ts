@@ -12,13 +12,16 @@ import { addHoursIso, dateTimeIso, makeId, makePublicToken, nowIso } from "../mo
 import { createNotification, resendNotification } from "../mock/eventownia/notifications";
 import {
   bookingDetail,
-  findPriceRule,
+  findActiveHourlyPrice,
+  findDefaultVariant,
+  findPriceSetForVariant,
+  findVariantForProductKey,
   getMockAdmin,
   getState,
   publicProduct,
   rentalRequestDetail,
 } from "../mock/eventownia/store";
-import type { AvailabilityBlock, Booking, PriceRule, Product, ProductAsset } from "../mock/eventownia/types";
+import type { AvailabilityBlock, Booking, Price, PriceSet, Product, ProductAsset, ProductVariant } from "../mock/eventownia/types";
 import { adminOrdersRouter } from "./orders";
 
 const productInput = z.object({
@@ -75,12 +78,8 @@ export const adminRouter = router({
       const state = getState();
       return state.products
         .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((product) => ({
-          ...product,
-          category: state.categories.find((item) => item.id === product.categoryId) ?? null,
-          pricing: findPriceRule(product.id) ?? null,
-          assets: state.productAssets.filter((asset) => asset.productId === product.id),
-        }));
+        .map((product) => publicProduct(product.id))
+        .filter((product) => product !== null);
     }),
 
     detail: publicProcedure.input(z.object({ id: z.string() })).query(({ input }) => publicProduct(input.id)),
@@ -91,7 +90,6 @@ export const adminRouter = router({
       const product: Product = {
         id: makeId("prod"),
         categoryId: input.categoryId,
-        sku: input.sku,
         slug: input.slug,
         namePl: input.namePl,
         shortDescriptionPl: input.shortDescriptionPl ?? "Nowy produkt makietowy.",
@@ -104,18 +102,26 @@ export const adminRouter = router({
         setupMinutes: input.setupMinutes ?? 45,
         teardownMinutes: input.teardownMinutes ?? 45,
         cleaningBufferMinutes: input.cleaningBufferMinutes ?? 0,
-        inventoryCount: input.inventoryCount ?? 1,
         sortOrder: state.products.length * 10 + 10,
         visualTone: input.visualTone ?? "neutral",
         createdAt: now,
         updatedAt: now,
       };
-      const priceRule: PriceRule = {
-        id: makeId("price"),
+      const variant: ProductVariant = {
+        id: makeId("variant"),
         productId: product.id,
-        unitMode: "per_hour",
-        currency: "PLN",
-        hourlyPriceZloty: input.hourlyPriceZloty,
+        sku: input.sku,
+        title: "Default",
+        isDefault: true,
+        active: true,
+        inventoryCount: input.inventoryCount ?? 1,
+        sortOrder: 10,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const priceSet: PriceSet = {
+        id: makeId("pset"),
+        variantId: variant.id,
         depositMode: "fixed",
         depositAmountZloty: 300,
         depositPercent: null,
@@ -123,10 +129,22 @@ export const adminRouter = router({
         createdAt: now,
         updatedAt: now,
       };
+      const price: Price = {
+        id: makeId("price"),
+        priceSetId: priceSet.id,
+        currency: "PLN",
+        unitMode: "per_hour",
+        amountZloty: input.hourlyPriceZloty,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      };
       state.products.unshift(product);
-      state.priceRules.unshift(priceRule);
+      state.productVariants.unshift(variant);
+      state.priceSets.unshift(priceSet);
+      state.prices.unshift(price);
       appendAuditLog("product.create", "product", product.id, null, product);
-      return product;
+      return publicProduct(product.id);
     }),
 
     update: publicProcedure.input(z.object({ id: z.string(), data: productInput })).mutation(({ input }) => {
@@ -134,9 +152,18 @@ export const adminRouter = router({
       const product = state.products.find((item) => item.id === input.id);
       if (!product) return null;
       const before = { ...product };
-      Object.assign(product, input.data, { updatedAt: nowIso() });
+      const { sku, inventoryCount, ...productData } = input.data;
+      Object.assign(product, productData, { updatedAt: nowIso() });
       appendAuditLog("product.update", "product", product.id, before, product);
-      return product;
+      const variant = findDefaultVariant(product.id);
+      if (variant && (sku !== undefined || inventoryCount !== undefined)) {
+        const beforeVariant = { ...variant };
+        if (sku !== undefined) variant.sku = sku;
+        if (inventoryCount !== undefined) variant.inventoryCount = inventoryCount;
+        variant.updatedAt = nowIso();
+        appendAuditLog("product.variant.update", "product_variant", variant.id, beforeVariant, variant);
+      }
+      return publicProduct(product.id);
     }),
 
     deactivate: publicProcedure.input(z.object({ id: z.string() })).mutation(({ input }) => {
@@ -185,18 +212,63 @@ export const adminRouter = router({
       )
       .mutation(({ input }) => {
         const state = getState();
-        const rule = state.priceRules.find((item) => item.productId === input.id && item.active);
-        if (!rule) return null;
-        const before = { ...rule };
-        rule.unitMode = "per_hour";
-        rule.hourlyPriceZloty = input.hourlyPriceZloty;
-        if (input.depositAmountZloty !== undefined) {
-          rule.depositAmountZloty = input.depositAmountZloty;
+        const now = nowIso();
+        let variant = findDefaultVariant(input.id);
+        if (!variant) {
+          const product = state.products.find((item) => item.id === input.id);
+          if (!product) return null;
+          variant = {
+            id: makeId("variant"),
+            productId: product.id,
+            sku: product.id,
+            title: "Default",
+            isDefault: true,
+            active: true,
+            inventoryCount: 0,
+            sortOrder: 10,
+            createdAt: now,
+            updatedAt: now,
+          };
+          state.productVariants.unshift(variant);
         }
-        rule.depositMode = rule.depositAmountZloty ? "fixed" : "none";
-        rule.updatedAt = nowIso();
-        appendAuditLog("product.pricing.update", "price_rule", rule.id, before, rule);
-        return rule;
+        let priceSet = findPriceSetForVariant(variant.id);
+        if (!priceSet) {
+          priceSet = {
+            id: makeId("pset"),
+            variantId: variant.id,
+            depositMode: input.depositAmountZloty ? "fixed" : "none",
+            depositAmountZloty: input.depositAmountZloty ?? null,
+            depositPercent: null,
+            active: true,
+            createdAt: now,
+            updatedAt: now,
+          };
+          state.priceSets.unshift(priceSet);
+        }
+        let price = findActiveHourlyPrice(priceSet.id);
+        if (!price) {
+          price = {
+            id: makeId("price"),
+            priceSetId: priceSet.id,
+            currency: "PLN",
+            unitMode: "per_hour",
+            amountZloty: input.hourlyPriceZloty,
+            active: true,
+            createdAt: now,
+            updatedAt: now,
+          };
+          state.prices.unshift(price);
+        }
+        const before = { priceSet: { ...priceSet }, price: { ...price } };
+        price.amountZloty = input.hourlyPriceZloty;
+        price.updatedAt = now;
+        if (input.depositAmountZloty !== undefined) {
+          priceSet.depositAmountZloty = input.depositAmountZloty;
+        }
+        priceSet.depositMode = priceSet.depositAmountZloty ? "fixed" : "none";
+        priceSet.updatedAt = now;
+        appendAuditLog("product.pricing.update", "price_set", priceSet.id, before, { priceSet, price });
+        return publicProduct(input.id)?.pricing ?? null;
       }),
   }),
 
@@ -300,13 +372,14 @@ export const adminRouter = router({
       const now = nowIso();
       const customer = { id: makeId("cust"), name: input.customerName, email: null, phone: input.phone, marketingConsent: false, anonymizedAt: null, createdAt: now, updatedAt: now };
       const location = { id: makeId("loc"), customerId: customer.id, label: "Rezerwacja ręczna", street: "Ulica i numer do uzupełnienia", addressDetails: null, postalCode: "00-000", city: "Do potwierdzenia", country: "PL" as const, surfaceType: null, powerAvailable: null, accessNotes: null, createdAt: now, updatedAt: now };
+      const variant = findVariantForProductKey(input.productId);
       const eventStartAt = dateTimeIso(input.date, input.startTime);
       const eventEndAt = addHoursIso(eventStartAt, input.durationHours);
       const booking: Booking = { id: makeId("book"), rentalRequestId: null, publicToken: makePublicToken("btok"), status: "confirmed", customerId: customer.id, locationId: location.id, eventStartAt, eventEndAt, setupStartAt: eventStartAt, teardownEndAt: eventEndAt, durationHours: input.durationHours, currency: "PLN", subtotalZloty: input.totalZloty, travelFeeZloty: 0, discountZloty: 0, totalZloty: input.totalZloty, manualPaymentStatus: "unpaid", depositRequiredZloty: 0, paidAmountZloty: 0, paymentNotes: null, paymentUpdatedAt: null, paymentUpdatedByAdminId: null, confirmedAt: now, expiresAt: null, adminNotes: "Manual/offline booking.", customerNotes: null, createdByAdminId: getMockAdmin()?.id ?? null, generatedContractId: null, createdAt: now, updatedAt: now };
       state.customers.unshift(customer);
       state.locations.unshift(location);
       state.bookings.unshift(booking);
-      state.bookingItems.unshift({ id: makeId("bitem"), bookingId: booking.id, productId: input.productId, quantity: 1, hourlyPriceZloty: input.durationHours > 0 ? Math.round(input.totalZloty / input.durationHours) : input.totalZloty, billableHours: input.durationHours, lineTotalZloty: input.totalZloty, createdAt: now, updatedAt: now });
+      state.bookingItems.unshift({ id: makeId("bitem"), bookingId: booking.id, variantId: variant?.id ?? null, productId: variant?.productId ?? input.productId, quantity: 1, hourlyPriceZloty: input.durationHours > 0 ? Math.round(input.totalZloty / input.durationHours) : input.totalZloty, billableHours: input.durationHours, lineTotalZloty: input.totalZloty, createdAt: now, updatedAt: now });
       appendAuditLog("booking.create", "booking", booking.id, null, booking);
       return bookingDetail(booking.id);
     }),

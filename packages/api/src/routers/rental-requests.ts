@@ -125,11 +125,12 @@ export const rentalRequestsRouter = router({
       };
       const requestItems: RentalRequestItem[] = input.items.map((item) => {
         const product = findProductBySkuOrId(item.sku);
-        const line = quote.lines.find((quoteLine) => quoteLine.sku === item.sku);
+        const line = quote.lines.find((quoteLine) => quoteLine.productId === product?.id || quoteLine.sku === item.sku || quoteLine.variantId === item.sku);
         return {
           id: makeId("rritem"),
           rentalRequestId: request.id,
-          productId: product?.id ?? item.sku,
+          variantId: line?.variantId ?? null,
+          productId: line?.productId ?? product?.id ?? item.sku,
           quantity: item.quantity,
           hourlyPriceZloty: line?.hourlyPriceZloty ?? null,
           billableHours: line?.billableHours ?? input.event.durationHours,

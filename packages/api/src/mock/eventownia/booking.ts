@@ -65,6 +65,7 @@ export function confirmRentalRequest(
   const bookingItems: BookingItem[] = requestItems.map((item) => ({
     id: makeId("bitem"),
     bookingId: booking.id,
+    variantId: item.variantId,
     productId: item.productId,
     quantity: item.quantity,
     hourlyPriceZloty: item.hourlyPriceZloty ?? 0,
