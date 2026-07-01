@@ -37,11 +37,11 @@ function HomeComponent() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button render={<Link to="/produkty" />}>
+                <Button render={<Link to="/products" />}>
                   Zobacz ofertę
                   <ArrowRight data-icon="inline-end" />
                 </Button>
-                <Button variant="outline" render={<Link to="/wynajem" search={{}} />}>
+                <Button variant="outline" render={<Link to="/cart" search={{}} />}>
                   <CalendarCheck data-icon="inline-start" />
                   Szybka wycena
                 </Button>
@@ -84,7 +84,7 @@ function HomeComponent() {
             return (
               <Link
                 key={category.id}
-                to="/kategorie/$slug"
+                to="/categories/$slug"
                 params={{ slug: category.slug }}
                 className={[
                   "group relative min-h-64 overflow-hidden rounded-3xl bg-surface-container-high shadow-soft",
@@ -118,7 +118,7 @@ function HomeComponent() {
             </div>
             <h2 className="text-3xl font-bold">Polecane produkty</h2>
           </div>
-          <Button variant="outline" render={<Link to="/produkty" />}>
+          <Button variant="outline" render={<Link to="/products" />}>
             Katalog
             <ArrowRight data-icon="inline-end" />
           </Button>

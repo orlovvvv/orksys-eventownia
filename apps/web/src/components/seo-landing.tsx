@@ -25,7 +25,7 @@ export function SeoLanding({ path }: { path: string }) {
           <h1 className="text-4xl font-bold leading-tight md:text-5xl">{page?.title}</h1>
           <p className="text-base/relaxed text-primary-foreground/85">{page?.description}</p>
           <div>
-            <Button render={<Link to="/wynajem" search={{}} />}>
+            <Button render={<Link to="/cart" search={{}} />}>
               Zapytaj o dostępność
               <ArrowRight data-icon="inline-end" />
             </Button>

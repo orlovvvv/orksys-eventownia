@@ -6,8 +6,8 @@ import type { Booking, BookingItem } from "./types";
 export function confirmRentalRequest(
   rentalRequestId: string,
   input: {
-    travelFeeGrosz: number;
-    depositRequiredGrosz: number;
+    travelFeeZloty: number;
+    depositRequiredZloty: number;
     adminNotes?: string;
   },
 ) {
@@ -27,7 +27,7 @@ export function confirmRentalRequest(
   const eventEndAt = addHoursIso(eventStartAt, request.durationHours);
   const now = nowIso();
   const admin = getMockAdmin();
-  const totalGrosz = request.subtotalGrosz + input.travelFeeGrosz - request.discountGrosz;
+  const totalZloty = request.subtotalZloty + input.travelFeeZloty - request.discountZloty;
 
   const booking: Booking = {
     id: makeId("book"),
@@ -42,13 +42,13 @@ export function confirmRentalRequest(
     teardownEndAt: addMinutesIso(eventEndAt, maxTeardown + maxCleaning),
     durationHours: request.durationHours,
     currency: "PLN",
-    subtotalGrosz: request.subtotalGrosz,
-    travelFeeGrosz: input.travelFeeGrosz,
-    discountGrosz: request.discountGrosz,
-    totalGrosz,
-    manualPaymentStatus: input.depositRequiredGrosz > 0 ? "unpaid" : "not_required",
-    depositRequiredGrosz: input.depositRequiredGrosz,
-    paidAmountGrosz: 0,
+    subtotalZloty: request.subtotalZloty,
+    travelFeeZloty: input.travelFeeZloty,
+    discountZloty: request.discountZloty,
+    totalZloty,
+    manualPaymentStatus: input.depositRequiredZloty > 0 ? "unpaid" : "not_required",
+    depositRequiredZloty: input.depositRequiredZloty,
+    paidAmountZloty: 0,
     paymentNotes: null,
     paymentUpdatedAt: null,
     paymentUpdatedByAdminId: null,
@@ -65,18 +65,19 @@ export function confirmRentalRequest(
   const bookingItems: BookingItem[] = requestItems.map((item) => ({
     id: makeId("bitem"),
     bookingId: booking.id,
+    variantId: item.variantId,
     productId: item.productId,
     quantity: item.quantity,
-    unitPriceGrosz: item.unitPriceGrosz ?? 0,
-    extraHours: item.extraHours,
-    lineTotalGrosz: item.lineTotalGrosz ?? 0,
+    hourlyPriceZloty: item.hourlyPriceZloty ?? 0,
+    billableHours: item.billableHours,
+    lineTotalZloty: item.lineTotalZloty ?? 0,
     createdAt: now,
     updatedAt: now,
   }));
 
   request.status = "confirmed";
-  request.travelFeeGrosz = input.travelFeeGrosz;
-  request.totalEstimateGrosz = totalGrosz;
+  request.travelFeeZloty = input.travelFeeZloty;
+  request.totalEstimateZloty = totalZloty;
   request.adminNotes = input.adminNotes ?? request.adminNotes;
   request.updatedAt = now;
   state.bookings.unshift(booking);

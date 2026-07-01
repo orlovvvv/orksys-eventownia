@@ -1,5 +1,5 @@
 import { formatMoney } from "@/lib/format";
 
-export function Money({ amountGrosz }: { amountGrosz: number | null | undefined }) {
-  return <span>{formatMoney(amountGrosz)}</span>;
+export function Money({ amountZloty }: { amountZloty: number | null | undefined }) {
+  return <span>{formatMoney(amountZloty)}</span>;
 }

@@ -1,6 +1,6 @@
 import { makeId, nowIso } from "./ids";
-import { findPriceRule, findProductBySkuOrId, getState, recordAnalytics } from "./store";
-import type { Quote, QuoteLine, QuoteMode } from "./types";
+import { findActiveHourlyPrice, findPriceSetForVariant, findProductById, findVariantForProductKey, getState, recordAnalytics } from "./store";
+import type { Currency, EstimateSummary, EstimateSummaryLine, Quote, QuoteLine, QuoteMode } from "./types";
 
 export type QuoteInput = {
   event: {
@@ -13,63 +13,119 @@ export type QuoteInput = {
   items: { sku: string; quantity: number }[];
 };
 
+export function buildEstimateSummary(input: {
+  currency: Currency;
+  durationHours: number;
+  lines: EstimateSummaryLine[];
+}): EstimateSummary {
+  return {
+    currency: input.currency,
+    billableHours: input.durationHours,
+    lines: input.lines,
+    itemsSubtotalZloty: input.lines.reduce((sum, line) => sum + (line.lineTotalZloty ?? 0), 0),
+    travel: {
+      mode: "manual_distance",
+      amountZloty: null,
+      label: "Dojazd do wyceny",
+      message: "Koszt dojazdu zostanie wyliczony ręcznie po sprawdzeniu odległości.",
+    },
+    discountZloty: 0,
+    finalQuote: {
+      status: "pending_manual_distance",
+      totalZloty: null,
+      message: "Pełna wycena zostanie przygotowana po ręcznym obliczeniu kosztu dojazdu.",
+    },
+  };
+}
+
+export function buildFinalizedEstimateSummary(input: {
+  currency: Currency;
+  durationHours: number;
+  lines: EstimateSummaryLine[];
+  travelFeeZloty: number;
+  discountZloty: number;
+  totalZloty: number;
+}): EstimateSummary {
+  return {
+    currency: input.currency,
+    billableHours: input.durationHours,
+    lines: input.lines,
+    itemsSubtotalZloty: input.lines.reduce((sum, line) => sum + (line.lineTotalZloty ?? 0), 0),
+    travel: {
+      mode: "manual_distance",
+      amountZloty: input.travelFeeZloty,
+      label: "Dojazd",
+      message: "Koszt dojazdu został wyliczony ręcznie po sprawdzeniu odległości.",
+    },
+    discountZloty: input.discountZloty,
+    finalQuote: {
+      status: "finalized",
+      totalZloty: input.totalZloty,
+      message: "Pełna wycena została przygotowana po ręcznym obliczeniu kosztu dojazdu.",
+    },
+  };
+}
+
 export function calculateQuote(input: QuoteInput, options: { persist?: boolean } = {}): Quote {
   const state = getState();
+  const billableHours = input.event.durationHours;
   const lines: QuoteLine[] = input.items.map((item) => {
-    const product = findProductBySkuOrId(item.sku);
-    if (!product) {
+    const variant = findVariantForProductKey(item.sku);
+    const product = variant ? findProductById(variant.productId) : null;
+    if (!variant || !product) {
       return {
+        variantId: variant?.id ?? null,
         sku: item.sku,
-        productId: item.sku,
-        name: item.sku,
+        productId: product?.id ?? item.sku,
+        name: product?.namePl ?? item.sku,
         quantity: item.quantity,
-        quoteMode: "manual",
-        basePriceGrosz: null,
-        baseHours: null,
-        extraHours: 0,
-        extraHourPriceGrosz: null,
-        lineTotalGrosz: null,
+        hourlyPriceZloty: null,
+        billableHours,
+        lineTotalZloty: null,
+        pricingStatus: "missing_hourly_price",
       };
     }
 
-    const rule = findPriceRule(product.id);
-    if (!rule || rule.quoteMode === "manual" || rule.basePriceGrosz === null || rule.baseHours === null) {
+    const priceSet = findPriceSetForVariant(variant.id);
+    const price = priceSet ? findActiveHourlyPrice(priceSet.id) : null;
+    if (!priceSet || !price) {
       return {
-        sku: product.sku,
+        variantId: variant.id,
+        sku: variant.sku,
         productId: product.id,
         name: product.namePl,
         quantity: item.quantity,
-        quoteMode: "manual",
-        basePriceGrosz: null,
-        baseHours: null,
-        extraHours: 0,
-        extraHourPriceGrosz: null,
-        lineTotalGrosz: null,
+        hourlyPriceZloty: null,
+        billableHours,
+        lineTotalZloty: null,
+        pricingStatus: "missing_hourly_price",
       };
     }
 
-    const extraHours = Math.max(0, input.event.durationHours - rule.baseHours);
-    const extraHourPriceGrosz = Math.round((rule.basePriceGrosz * rule.extraHourPercent) / 100);
-    const lineTotalGrosz = item.quantity * (rule.basePriceGrosz + extraHours * extraHourPriceGrosz);
+    const lineTotalZloty = item.quantity * price.amountZloty * billableHours;
     return {
-      sku: product.sku,
+      variantId: variant.id,
+      sku: variant.sku,
       productId: product.id,
       name: product.namePl,
       quantity: item.quantity,
-      quoteMode: "automatic",
-      basePriceGrosz: rule.basePriceGrosz,
-      baseHours: rule.baseHours,
-      extraHours,
-      extraHourPriceGrosz,
-      lineTotalGrosz,
+      hourlyPriceZloty: price.amountZloty,
+      billableHours,
+      lineTotalZloty,
+      pricingStatus: "priced",
     };
   });
 
-  const hasManualLine = lines.some((line) => line.quoteMode === "manual");
-  const subtotalGrosz = lines.reduce((sum, line) => sum + (line.lineTotalGrosz ?? 0), 0);
-  const quoteMode: QuoteMode = hasManualLine ? "manual" : "automatic_with_manual_travel_fee";
+  const hasMissingPriceLine = lines.some((line) => line.pricingStatus === "missing_hourly_price");
+  const subtotalZloty = lines.reduce((sum, line) => sum + (line.lineTotalZloty ?? 0), 0);
+  const quoteMode: QuoteMode = hasMissingPriceLine ? "requires_hourly_price" : "automatic_with_manual_travel_fee";
+  const estimateSummary = buildEstimateSummary({
+    currency: "PLN",
+    durationHours: input.event.durationHours,
+    lines,
+  });
   const warnings = ["Cena nie obejmuje kosztu dojazdu.", "Dostępność wymaga potwierdzenia przez obsługę."];
-  if (hasManualLine) warnings.unshift("Część pozycji wymaga ręcznej wyceny.");
+  if (hasMissingPriceLine) warnings.unshift("Część pozycji nie ma ustawionej stawki godzinowej.");
 
   const quote: Quote = {
     id: makeId("quote"),
@@ -77,13 +133,14 @@ export function calculateQuote(input: QuoteInput, options: { persist?: boolean }
     currency: "PLN",
     durationHours: input.event.durationHours,
     lines,
-    subtotalGrosz,
+    estimateSummary,
+    subtotalZloty,
     travelFee: {
       mode: "manual",
-      amountGrosz: null,
+      amountZloty: null,
       label: "Koszt dojazdu do potwierdzenia",
     },
-    totalEstimateGrosz: hasManualLine ? null : subtotalGrosz,
+    totalEstimateZloty: hasMissingPriceLine ? null : subtotalZloty,
     warnings,
     event: {
       date: input.event.date,

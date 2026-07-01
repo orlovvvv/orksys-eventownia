@@ -7,7 +7,7 @@ import { appendAuditLog } from "../mock/eventownia/audit";
 import { cancelBooking, completeBooking, confirmRentalRequest, declineRentalRequest } from "../mock/eventownia/booking";
 import { dateTimeIso, makeId, makePublicToken, nowIso } from "../mock/eventownia/ids";
 import { createNotification } from "../mock/eventownia/notifications";
-import { calculateQuote } from "../mock/eventownia/pricing";
+import { buildEstimateSummary, buildFinalizedEstimateSummary, calculateQuote } from "../mock/eventownia/pricing";
 import {
   bookingDetail,
   findProductBySkuOrId,
@@ -16,7 +16,7 @@ import {
   recordAnalytics,
   rentalRequestDetail,
 } from "../mock/eventownia/store";
-import type { ManualPaymentStatus, RentalRequest, RentalRequestItem } from "../mock/eventownia/types";
+import type { EstimateSummaryLine, ManualPaymentStatus, RentalRequest, RentalRequestItem } from "../mock/eventownia/types";
 
 const orderItemSchema = z.object({
   productId: z.string().min(1),
@@ -26,7 +26,7 @@ const orderItemSchema = z.object({
 const eventPreviewSchema = z.object({
   date: z.string().min(1),
   startTime: z.string().min(1),
-  durationHours: z.number().positive(),
+  durationHours: z.number().int().positive(),
   postalCode: z.string().min(1),
   city: z.string().min(1),
 });
@@ -40,9 +40,10 @@ const customerSchema = z.object({
 const eventSubmitSchema = z.object({
   date: z.string().min(1),
   startTime: z.string().min(1),
-  durationHours: z.number().positive(),
+  durationHours: z.number().int().positive(),
   location: z.object({
     street: z.string().min(1),
+    addressDetails: z.string().optional(),
     postalCode: z.string().min(1),
     city: z.string().min(1),
     country: z.literal("PL").default("PL"),
@@ -84,6 +85,23 @@ function previewOrder(input: z.infer<typeof orderPreviewInput>) {
 function normalizeRequest(idOrToken: string) {
   const request = rentalRequestDetail(idOrToken);
   if (!request) return null;
+  const estimateSummary = buildEstimateSummary({
+    currency: "PLN",
+    durationHours: request.durationHours,
+    lines: request.items.map(
+      (item): EstimateSummaryLine => ({
+        variantId: item.variantId,
+        productId: item.productId,
+        sku: item.product?.sku ?? item.productId,
+        name: item.product?.namePl ?? "Pozycja",
+        quantity: item.quantity,
+        hourlyPriceZloty: item.hourlyPriceZloty,
+        billableHours: item.billableHours,
+        lineTotalZloty: item.lineTotalZloty,
+        pricingStatus: item.pricingStatus,
+      }),
+    ),
+  });
   return {
     kind: "pending" as const,
     id: request.id,
@@ -92,6 +110,7 @@ function normalizeRequest(idOrToken: string) {
     customer: request.customer,
     location: request.location,
     items: request.items,
+    estimateSummary,
     eventDate: request.eventDate,
     startTime: request.startTime,
     durationHours: request.durationHours,
@@ -99,13 +118,13 @@ function normalizeRequest(idOrToken: string) {
     eventEndAt: null,
     setupStartAt: null,
     teardownEndAt: null,
-    subtotalGrosz: request.subtotalGrosz,
-    travelFeeGrosz: request.travelFeeGrosz,
-    discountGrosz: request.discountGrosz,
-    totalGrosz: request.totalEstimateGrosz,
+    subtotalZloty: request.subtotalZloty,
+    travelFeeZloty: request.travelFeeZloty,
+    discountZloty: request.discountZloty,
+    totalZloty: request.totalEstimateZloty,
     manualPaymentStatus: null as ManualPaymentStatus | null,
-    depositRequiredGrosz: 0,
-    paidAmountGrosz: 0,
+    depositRequiredZloty: 0,
+    paidAmountZloty: 0,
     paymentNotes: null as string | null,
     paymentUpdatedAt: null as string | null,
     adminNotes: request.adminNotes,
@@ -122,6 +141,26 @@ function normalizeRequest(idOrToken: string) {
 function normalizeBooking(idOrToken: string) {
   const booking = bookingDetail(idOrToken);
   if (!booking) return null;
+  const estimateSummary = buildFinalizedEstimateSummary({
+    currency: "PLN",
+    durationHours: booking.durationHours,
+    lines: booking.items.map(
+      (item): EstimateSummaryLine => ({
+        variantId: item.variantId,
+        productId: item.productId,
+        sku: item.product?.sku ?? item.productId,
+        name: item.product?.namePl ?? "Pozycja",
+        quantity: item.quantity,
+        hourlyPriceZloty: item.hourlyPriceZloty,
+        billableHours: item.billableHours,
+        lineTotalZloty: item.lineTotalZloty,
+        pricingStatus: "priced",
+      }),
+    ),
+    travelFeeZloty: booking.travelFeeZloty,
+    discountZloty: booking.discountZloty,
+    totalZloty: booking.totalZloty,
+  });
   return {
     kind: "booking" as const,
     id: booking.id,
@@ -130,6 +169,7 @@ function normalizeBooking(idOrToken: string) {
     customer: booking.customer,
     location: booking.location,
     items: booking.items,
+    estimateSummary,
     eventDate: booking.eventStartAt.slice(0, 10),
     startTime: booking.eventStartAt.slice(11, 16),
     durationHours: booking.durationHours,
@@ -137,13 +177,13 @@ function normalizeBooking(idOrToken: string) {
     eventEndAt: booking.eventEndAt,
     setupStartAt: booking.setupStartAt,
     teardownEndAt: booking.teardownEndAt,
-    subtotalGrosz: booking.subtotalGrosz,
-    travelFeeGrosz: booking.travelFeeGrosz,
-    discountGrosz: booking.discountGrosz,
-    totalGrosz: booking.totalGrosz,
+    subtotalZloty: booking.subtotalZloty,
+    travelFeeZloty: booking.travelFeeZloty,
+    discountZloty: booking.discountZloty,
+    totalZloty: booking.totalZloty,
     manualPaymentStatus: booking.manualPaymentStatus,
-    depositRequiredGrosz: booking.depositRequiredGrosz,
-    paidAmountGrosz: booking.paidAmountGrosz,
+    depositRequiredZloty: booking.depositRequiredZloty,
+    paidAmountZloty: booking.paidAmountZloty,
     paymentNotes: booking.paymentNotes,
     paymentUpdatedAt: booking.paymentUpdatedAt,
     adminNotes: booking.adminNotes,
@@ -219,6 +259,9 @@ export const ordersRouter = router({
       if (!preview.availability.available) {
         throw new TRPCError({ code: "CONFLICT", message: "Selected items are unavailable for this event date." });
       }
+      if (preview.quote.quoteMode === "requires_hourly_price") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Every selected item must have an hourly price." });
+      }
 
       const state = getState();
       const now = nowIso();
@@ -237,6 +280,7 @@ export const ordersRouter = router({
         customerId: customer.id,
         label: "Lokalizacja wydarzenia",
         street: input.event.location.street,
+        addressDetails: input.event.location.addressDetails?.trim() || null,
         postalCode: input.event.location.postalCode,
         city: input.event.location.city,
         country: "PL" as const,
@@ -256,10 +300,10 @@ export const ordersRouter = router({
         startTime: input.event.startTime,
         durationHours: input.event.durationHours,
         quoteMode: preview.quote.quoteMode,
-        subtotalGrosz: preview.quote.subtotalGrosz,
-        travelFeeGrosz: null,
-        discountGrosz: 0,
-        totalEstimateGrosz: preview.quote.totalEstimateGrosz,
+        subtotalZloty: preview.quote.subtotalZloty,
+        travelFeeZloty: null,
+        discountZloty: 0,
+        totalEstimateZloty: preview.quote.totalEstimateZloty,
         message: input.message ?? null,
         source: "website",
         turnstileVerifiedAt: now,
@@ -275,12 +319,13 @@ export const ordersRouter = router({
         return {
           id: makeId("rritem"),
           rentalRequestId: request.id,
-          productId: product?.id ?? item.productId,
+          variantId: line?.variantId ?? null,
+          productId: line?.productId ?? product?.id ?? item.productId,
           quantity: item.quantity,
-          unitPriceGrosz: line?.basePriceGrosz ?? null,
-          extraHours: line?.extraHours ?? 0,
-          lineTotalGrosz: line?.lineTotalGrosz ?? null,
-          quoteMode: line?.quoteMode ?? "manual",
+          hourlyPriceZloty: line?.hourlyPriceZloty ?? null,
+          billableHours: line?.billableHours ?? input.event.durationHours,
+          lineTotalZloty: line?.lineTotalZloty ?? null,
+          pricingStatus: line?.pricingStatus ?? "missing_hourly_price",
           createdAt: now,
           updatedAt: now,
         };
@@ -349,21 +394,22 @@ export const adminOrdersRouter = router({
     .input(
       z.object({
         id: z.string(),
-        travelFeeGrosz: z.number().int().min(0),
-        discountGrosz: z.number().int().min(0).default(0),
-        depositRequiredGrosz: z.number().int().min(0),
+        travelFeeZloty: z.number().int().min(0),
+        discountZloty: z.number().int().min(0).default(0),
+        depositRequiredZloty: z.number().int().min(0),
         adminNotes: z.string().optional(),
       }),
     )
     .mutation(({ input }) => {
       const request = findPendingRequest(input.id);
       if (!request || request.status !== "pending_admin_review") return null;
+      if (request.quoteMode === "requires_hourly_price") return null;
       const before = rentalRequestDetail(request.id);
-      request.discountGrosz = input.discountGrosz;
-      request.totalEstimateGrosz = request.subtotalGrosz + input.travelFeeGrosz - input.discountGrosz;
+      request.discountZloty = input.discountZloty;
+      request.totalEstimateZloty = request.subtotalZloty + input.travelFeeZloty - input.discountZloty;
       const booking = confirmRentalRequest(request.id, {
-        travelFeeGrosz: input.travelFeeGrosz,
-        depositRequiredGrosz: input.depositRequiredGrosz,
+        travelFeeZloty: input.travelFeeZloty,
+        depositRequiredZloty: input.depositRequiredZloty,
         adminNotes: input.adminNotes,
       });
       appendAuditLog("order.confirm", "order", input.id, before, booking);
@@ -398,7 +444,7 @@ export const adminOrdersRouter = router({
       z.object({
         id: z.string(),
         manualPaymentStatus: z.enum(["not_required", "unpaid", "deposit_paid", "paid"]),
-        paidAmountGrosz: z.number().int().min(0),
+        paidAmountZloty: z.number().int().min(0),
         paymentNotes: z.string().optional(),
       }),
     )
@@ -407,7 +453,7 @@ export const adminOrdersRouter = router({
       if (!booking) return null;
       const before = { ...booking };
       booking.manualPaymentStatus = input.manualPaymentStatus;
-      booking.paidAmountGrosz = input.paidAmountGrosz;
+      booking.paidAmountZloty = input.paidAmountZloty;
       booking.paymentNotes = input.paymentNotes ?? null;
       booking.paymentUpdatedAt = nowIso();
       booking.paymentUpdatedByAdminId = getMockAdmin()?.id ?? null;

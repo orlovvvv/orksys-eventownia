@@ -89,7 +89,7 @@ export function AddToOrderButton({
         action: {
           label: "Zobacz koszyk",
           onClick: () => {
-            void navigate({ to: "/wynajem" });
+            void navigate({ to: "/cart" });
           },
         },
       });
@@ -104,7 +104,7 @@ export function AddToOrderButton({
         action: {
           label: "Zobacz koszyk",
           onClick: () => {
-            void navigate({ to: "/wynajem" });
+            void navigate({ to: "/cart" });
           },
         },
       });

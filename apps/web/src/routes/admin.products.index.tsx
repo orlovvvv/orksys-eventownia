@@ -36,6 +36,7 @@ function AdminProductsRoute() {
   const [namePl, setNamePl] = useState("Nowa atrakcja mock");
   const [slug, setSlug] = useState("nowa-atrakcja-mock");
   const [productType, setProductType] = useState("rental_product");
+  const [hourlyPriceZloty, setHourlyPriceZloty] = useState(500);
   const deactivate = useMutation(trpc.admin.products.deactivate.mutationOptions({ onSuccess: () => {
     toast.success("Produkt ukryty w makiecie.");
     void queryClient.invalidateQueries();
@@ -58,7 +59,7 @@ function AdminProductsRoute() {
   const typeItems = [
     { value: "rental_product", label: "Produkt wynajmu" },
     { value: "addon", label: "Dodatek" },
-    { value: "manual_quote_extra", label: "Ręczna wycena" },
+    { value: "event_extra", label: "Dodatek eventowy" },
   ];
 
   useEffect(() => {
@@ -73,7 +74,7 @@ function AdminProductsRoute() {
         statusFilter === "all" ||
         (statusFilter === "active" && product.active && product.publicVisible) ||
         (statusFilter === "hidden" && (!product.active || !product.publicVisible)) ||
-        (statusFilter === "issues" && (missingMedia || product.pricing?.basePriceGrosz === null));
+        (statusFilter === "issues" && (missingMedia || product.pricing?.hourlyPriceZloty === null || product.pricing?.hourlyPriceZloty === undefined));
       const matchesCategory = categoryFilter === "all" || product.category?.id === categoryFilter;
       const searchable = [product.namePl, product.sku, product.category?.namePl, product.shortDescriptionPl].filter(Boolean).join(" ").toLowerCase();
       return matchesStatus && matchesCategory && (!normalizedSearch || searchable.includes(normalizedSearch));
@@ -100,7 +101,7 @@ function AdminProductsRoute() {
         <Card>
           <CardHeader>
             <CardTitle>Dodaj produkt mock</CardTitle>
-            <CardDescription>Tworzy produkt i domyślną ręczną regułę cenową w pamięci mock.</CardDescription>
+            <CardDescription>Tworzy produkt i godzinową regułę cenową w pamięci mock.</CardDescription>
           </CardHeader>
           <CardContent>
             <FieldGroup>
@@ -125,11 +126,12 @@ function AdminProductsRoute() {
                     <SelectContent><SelectGroup>{typeItems.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectGroup></SelectContent>
                   </Select>
                 </Field>
+                <Field><FieldLabel>Stawka godzinowa (zł)</FieldLabel><Input type="number" min={0} value={hourlyPriceZloty} onChange={(event) => setHourlyPriceZloty(Number(event.target.value))} /></Field>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
                   disabled={!categoryId || create.isPending}
-                  onClick={() => create.mutate({ categoryId, sku, slug, namePl, productType: productType as "rental_product" | "addon" | "manual_quote_extra" })}
+                  onClick={() => create.mutate({ categoryId, sku, slug, namePl, productType: productType as "rental_product" | "addon" | "event_extra", hourlyPriceZloty })}
                 >
                   Dodaj produkt
                 </Button>
@@ -174,14 +176,14 @@ function AdminProductsRoute() {
           </CardHeader>
           <CardContent>
             <Table>
-              <TableHeader><TableRow><TableHead>Nazwa</TableHead><TableHead>Kategoria</TableHead><TableHead>Status</TableHead><TableHead>Cena</TableHead><TableHead>Magazyn</TableHead><TableHead /></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Nazwa</TableHead><TableHead>Kategoria</TableHead><TableHead>Status</TableHead><TableHead>Stawka</TableHead><TableHead>Magazyn</TableHead><TableHead /></TableRow></TableHeader>
               <TableBody>
                 {filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell><div className="font-semibold">{product.namePl}</div><div className="text-xs text-muted-foreground">{product.sku} · {compactId(product.id)}</div></TableCell>
                     <TableCell>{product.category?.namePl}</TableCell>
                     <TableCell><StatusBadge status={product.active && product.publicVisible ? "active" : "inactive"} /></TableCell>
-                    <TableCell><Money amountGrosz={product.pricing?.basePriceGrosz} /></TableCell>
+                    <TableCell><Money amountZloty={product.pricing?.hourlyPriceZloty} />/h</TableCell>
                     <TableCell>{product.inventoryCount} szt.</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
@@ -211,7 +213,7 @@ type ProductAdminItem = {
   inventoryCount: number;
   category: { id: string; slug: string; namePl: string } | null;
   assets: Array<{ publicUrl: string | null; altTextPl: string; isPrimary: boolean }>;
-  pricing: { basePriceGrosz: number | null } | null;
+  pricing: { hourlyPriceZloty: number | null } | null;
 };
 
 function ProductAdminCard({
@@ -246,8 +248,8 @@ function ProductAdminCard({
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <div className="text-xs text-muted-foreground">Cena bazowa</div>
-            <div className="font-semibold text-primary"><Money amountGrosz={product.pricing?.basePriceGrosz} /></div>
+            <div className="text-xs text-muted-foreground">Stawka godzinowa</div>
+            <div className="font-semibold text-primary"><Money amountZloty={product.pricing?.hourlyPriceZloty} />/h</div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground">Magazyn</div>

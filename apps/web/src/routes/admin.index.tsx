@@ -148,7 +148,7 @@ function AdminDashboardRoute() {
                         <StatusBadge status={request.status} />
                       </TableCell>
                       <TableCell>
-                        <Money amountGrosz={request.totalEstimateGrosz} />
+                        <Money amountZloty={request.totalEstimateZloty} />
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="outline" size="sm" render={<Link to="/admin/orders/$id" params={{ id: request.id }} />}>

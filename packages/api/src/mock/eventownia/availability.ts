@@ -1,5 +1,5 @@
 import { addHoursIso, addMinutesIso, dateTimeIso } from "./ids";
-import { findProductBySkuOrId, getState } from "./store";
+import { findDefaultVariant, findProductBySkuOrId, findVariantForProductKey, getState } from "./store";
 
 const blockingStatuses = new Set([
   "confirmed",
@@ -23,8 +23,9 @@ export function checkAvailability(input: AvailabilityInput) {
   const eventEndAt = addHoursIso(eventStartAt, input.durationHours);
 
   const items = input.items.map((item) => {
+    const variant = findVariantForProductKey(item.productId);
     const product = findProductBySkuOrId(item.productId);
-    if (!product || !product.active) {
+    if (!variant || !product || !product.active) {
       return {
         productId: item.productId,
         sku: item.productId,
@@ -35,6 +36,8 @@ export function checkAvailability(input: AvailabilityInput) {
         conflictReasons: ["Produkt nie istnieje lub jest nieaktywny."],
       };
     }
+    const defaultVariant = findDefaultVariant(product.id);
+    const availabilityVariant = defaultVariant ?? variant;
 
     const requestedStart = addMinutesIso(eventStartAt, -product.setupMinutes);
     const requestedEnd = addMinutesIso(eventEndAt, product.teardownMinutes + product.cleaningBufferMinutes);
@@ -52,14 +55,14 @@ export function checkAvailability(input: AvailabilityInput) {
         (availabilityBlock.productId === null || availabilityBlock.productId === product.id) &&
         overlaps(requestedStart, requestedEnd, availabilityBlock.startsAt, availabilityBlock.endsAt),
     );
-    const availableQuantity = block ? 0 : Math.max(0, product.inventoryCount - bookedQuantity);
+    const availableQuantity = block ? 0 : Math.max(0, availabilityVariant.inventoryCount - bookedQuantity);
     const conflictReasons: string[] = [];
     if (block) conflictReasons.push(block.reason);
     if (availableQuantity < item.quantity) conflictReasons.push("Brak wystarczającej liczby sztuk w wybranym terminie.");
 
     return {
       productId: product.id,
-      sku: product.sku,
+      sku: availabilityVariant.sku,
       name: product.namePl,
       available: availableQuantity >= item.quantity,
       availableQuantity,

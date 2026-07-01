@@ -24,10 +24,7 @@ export type ProductCardProduct = {
   category?: { slug: string; namePl: string } | null;
   assets?: { publicUrl: string | null; altTextPl: string; isPrimary: boolean }[] | null;
   pricing?: {
-    quoteMode: "automatic" | "manual";
-    basePriceGrosz: number | null;
-    baseHours: number | null;
-    extraHourPercent: number;
+    hourlyPriceZloty: number;
   } | null;
 };
 
@@ -51,7 +48,7 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
       }
       detailsLink={
         <Link
-          to="/produkty/$slug"
+          to="/products/$slug"
           params={{ slug: product.slug }}
           aria-label={`Zobacz szczegóły: ${product.namePl}`}
         />
@@ -91,13 +88,8 @@ export function ProductCardView({
         <p className="line-clamp-2 text-sm/relaxed text-muted-foreground">{product.shortDescriptionPl}</p>
         <div className="mt-auto flex flex-col gap-4 border-t border-border/50 pt-4 sm:flex-row sm:items-end sm:justify-between md:flex-col md:items-stretch 2xl:flex-row 2xl:items-end">
           <div className="flex flex-col gap-1">
-            <span className="text-sm text-muted-foreground">od</span>
             <span className="text-2xl font-bold text-primary">
-              {product.pricing?.quoteMode === "automatic" ? (
-                <Money amountGrosz={product.pricing.basePriceGrosz} />
-              ) : (
-                "Wycena indywidualna"
-              )}
+              <Money amountZloty={product.pricing?.hourlyPriceZloty} />/h
             </span>
           </div>
           {addControl}

@@ -1,10 +1,10 @@
-export function formatMoney(amountGrosz: number | null | undefined) {
-  if (amountGrosz === null || amountGrosz === undefined) return "do ustalenia";
+export function formatMoney(amountZloty: number | null | undefined) {
+  if (amountZloty === null || amountZloty === undefined) return "do ustalenia";
   return new Intl.NumberFormat("pl-PL", {
     style: "currency",
     currency: "PLN",
     maximumFractionDigits: 0,
-  }).format(amountGrosz / 100);
+  }).format(amountZloty);
 }
 
 export function formatDateTime(value: string | null | undefined) {

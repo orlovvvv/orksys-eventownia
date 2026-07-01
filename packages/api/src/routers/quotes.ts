@@ -10,7 +10,7 @@ export const quotesRouter = router({
         event: z.object({
           date: z.string().min(1),
           startTime: z.string().optional(),
-          durationHours: z.number().positive(),
+          durationHours: z.number().int().positive(),
           postalCode: z.string().min(1),
           city: z.string().min(1),
         }),

@@ -121,7 +121,7 @@ function AdminOrdersRoute() {
                   <TableCell className="max-w-72 whitespace-normal text-muted-foreground">{itemSummary(order.items)}</TableCell>
                   <TableCell><StatusBadge status={order.status} /></TableCell>
                   <TableCell><StatusBadge status={order.manualPaymentStatus} /></TableCell>
-                  <TableCell className="font-semibold"><Money amountGrosz={order.totalGrosz} /></TableCell>
+                  <TableCell className="font-semibold"><Money amountZloty={order.totalZloty} /></TableCell>
                   <TableCell className="text-right">
                     <Button variant="outline" size="sm" render={<Link to="/admin/orders/$id" params={{ id: order.id }} />}>Otwórz</Button>
                   </TableCell>

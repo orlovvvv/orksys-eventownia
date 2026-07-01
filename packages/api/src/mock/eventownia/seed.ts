@@ -8,9 +8,11 @@ import type {
   FeatureFlag,
   LegalDocument,
   MockState,
-  PriceRule,
+  Price,
+  PriceSet,
   Product,
   ProductAsset,
+  ProductVariant,
 } from "./types";
 
 const createdAt = "2026-06-01T10:00:00.000Z";
@@ -88,22 +90,21 @@ const productInput = [
   ["prod_track_bigballers", "cat_tracks", "TRACK_BIGBALLERS_PIRACKA", "dmuchane-bigballers-pirackie", "Dmuchane Bigballers, grafika piracka", "Rywalizacyjny tor z dużymi piłkami i pirackim motywem.", "rental_product", "sky"],
   ["prod_track_kanapa", "cat_tracks", "TRACK_KANAPA", "kanapa", "Kanapa", "Atrakcja rywalizacyjna do aktywnych stref firmowych i festynowych.", "rental_product", "orange"],
   ["prod_track_torowisko", "cat_tracks", "TRACK_TOROWISKO", "torowisko", "Torowisko", "Tor przeszkód do zawodów, pikników rodzinnych i imprez plenerowych.", "rental_product", "slate"],
-  ["prod_play_lilytoys", "cat_playgrounds", "PLAY_LILYTOYS_IMPORTED", "lilytoys-indoor-outdoor-inflatable-playground", "Lilytoys Indoor/Outdoor Inflatable Playground", "Produkt importowany do ręcznej weryfikacji przed finalną ofertą.", "rental_product", "teal"],
-  ["prod_machine_cotton", "cat_machines", "MACHINE_COTTON_CANDY_VEVOR", "maszyna-do-waty-cukrowej-vevor", "Maszyna do waty cukrowej VEVOR", "Maszyna gastronomiczna z ceną do potwierdzenia przez obsługę.", "rental_product", "pink"],
+  ["prod_play_lilytoys", "cat_playgrounds", "PLAY_LILYTOYS_IMPORTED", "lilytoys-indoor-outdoor-inflatable-playground", "Lilytoys Indoor/Outdoor Inflatable Playground", "Produkt importowany z godzinową stawką katalogową.", "rental_product", "teal"],
+  ["prod_machine_cotton", "cat_machines", "MACHINE_COTTON_CANDY_VEVOR", "maszyna-do-waty-cukrowej-vevor", "Maszyna do waty cukrowej VEVOR", "Maszyna gastronomiczna z godzinową stawką wynajmu.", "rental_product", "pink"],
   ["prod_machine_popcorn", "cat_machines", "MACHINE_POPCORN_VEVOR", "maszyna-do-popcornu-vevor", "Maszyna do popcornu VEVOR", "Maszyna do popcornu jako dodatek do wydarzeń rodzinnych i firmowych.", "rental_product", "yellow"],
   ["prod_tent_vevor", "cat_tents", "TENT_INFLATABLE_9X6X4_VEVOR", "nadmuchiwany-namiot-imprezowy-9x6x4", "Nadmuchiwany namiot imprezowy 9x6x4 m", "Namiot eventowy na dłuższy wynajem z opcjonalnymi efektami.", "rental_product", "stone"],
   ["prod_addon_zorb", "cat_addons", "ADDON_ZORB_TPU", "kula-zorb-tpu-premium", "Kula Zorb TPU Premium", "Dodatek rozliczany za sztukę, zwykle zamawiany razem z główną atrakcją.", "addon", "blue"],
   ["prod_addon_bumper", "cat_addons", "ADDON_BUMPER_BALL_TPU", "bumper-ball-tpu-premium", "Bumper Ball TPU Premium", "Bumper Ball do rywalizacji grupowej, rozliczany za sztukę.", "addon", "red"],
-  ["prod_extra_disco", "cat_addons", "EXTRA_DISCO_BALL", "kula-dyskotekowa", "Kula dyskotekowa", "Dodatek imprezowy wyceniany indywidualnie.", "manual_quote_extra", "zinc"],
-  ["prod_extra_sound", "cat_addons", "EXTRA_SOUND_SYSTEM", "naglosnienie", "Nagłośnienie", "Nagłośnienie eventowe wyceniane po potwierdzeniu skali wydarzenia.", "manual_quote_extra", "neutral"],
-  ["prod_extra_smoke", "cat_addons", "EXTRA_ARTIFICIAL_SMOKE", "sztuczny-dym", "Sztuczny dym", "Efekt specjalny do namiotu lub strefy imprezowej, cena do ustalenia.", "manual_quote_extra", "indigo"],
+  ["prod_extra_disco", "cat_addons", "EXTRA_DISCO_BALL", "kula-dyskotekowa", "Kula dyskotekowa", "Dodatek imprezowy z godzinową stawką wynajmu.", "event_extra", "zinc"],
+  ["prod_extra_sound", "cat_addons", "EXTRA_SOUND_SYSTEM", "naglosnienie", "Nagłośnienie", "Nagłośnienie eventowe z godzinową stawką wynajmu.", "event_extra", "neutral"],
+  ["prod_extra_smoke", "cat_addons", "EXTRA_ARTIFICIAL_SMOKE", "sztuczny-dym", "Sztuczny dym", "Efekt specjalny do namiotu lub strefy imprezowej z godzinową stawką wynajmu.", "event_extra", "indigo"],
 ] as const;
 
 const products: Product[] = productInput.map(
   ([id, categoryId, sku, slug, namePl, shortDescriptionPl, productType, visualTone], index) => ({
     id,
     categoryId,
-    sku,
     slug,
     namePl,
     shortDescriptionPl,
@@ -113,11 +114,10 @@ const products: Product[] = productInput.map(
     active: true,
     publicVisible: true,
     requiresPower: !sku.startsWith("ADDON_") && !sku.startsWith("EXTRA_"),
-    requiresOperator: productType !== "manual_quote_extra",
+    requiresOperator: productType !== "event_extra",
     setupMinutes: categoryId === "cat_tents" ? 90 : 45,
     teardownMinutes: categoryId === "cat_tents" ? 90 : 45,
     cleaningBufferMinutes: productType === "addon" ? 15 : 30,
-    inventoryCount: productType === "addon" ? 8 : 1,
     sortOrder: (index + 1) * 10,
     visualTone,
     createdAt,
@@ -125,48 +125,56 @@ const products: Product[] = productInput.map(
   }),
 );
 
-const automaticPrice = (productId: string, basePriceGrosz: number, baseHours: number): PriceRule => ({
-  id: `price_${productId}`,
-  productId,
-  quoteMode: "automatic",
-  unitMode: "per_booking",
-  currency: "PLN",
-  basePriceGrosz,
-  baseHours,
-  extraHourPercent: 20,
+const productVariants: ProductVariant[] = productInput.map(
+  ([productId, , sku, , , , productType], index) => ({
+    id: `variant_${productId}`,
+    productId,
+    sku,
+    title: "Default",
+    isDefault: true,
+    active: true,
+    inventoryCount: productType === "addon" ? 8 : 1,
+    sortOrder: (index + 1) * 10,
+    createdAt,
+    updatedAt: createdAt,
+  }),
+);
+
+const hourlyAmountForProduct = (product: Product, variant: ProductVariant) => {
+  if (product.categoryId === "cat_slides") return 800;
+  if (product.categoryId === "cat_playgrounds") return 1000;
+  if (product.categoryId === "cat_tracks") return 500;
+  if (product.categoryId === "cat_tents") return 1500;
+  if (product.categoryId === "cat_machines") return 500;
+  if (variant.sku === "ADDON_ZORB_TPU") return 300;
+  if (variant.sku === "ADDON_BUMPER_BALL_TPU") return 100;
+  if (product.productType === "event_extra") return 100;
+  return 1000;
+};
+
+const priceSets: PriceSet[] = productVariants.map((variant) => ({
+  id: `pset_${variant.id}`,
+  variantId: variant.id,
   depositMode: "fixed",
-  depositAmountGrosz: 30000,
+  depositAmountZloty: 300,
   depositPercent: null,
   active: true,
   createdAt,
   updatedAt: createdAt,
-});
+}));
 
-const manualPrice = (productId: string): PriceRule => ({
-  id: `price_${productId}`,
-  productId,
-  quoteMode: "manual",
-  unitMode: "manual_quote",
-  currency: "PLN",
-  basePriceGrosz: null,
-  baseHours: null,
-  extraHourPercent: 20,
-  depositMode: "none",
-  depositAmountGrosz: null,
-  depositPercent: null,
-  active: true,
-  createdAt,
-  updatedAt: createdAt,
-});
-
-const priceRules: PriceRule[] = products.map((product) => {
-  if (product.categoryId === "cat_slides") return automaticPrice(product.id, 80000, 5);
-  if (product.categoryId === "cat_playgrounds") return automaticPrice(product.id, 100000, 5);
-  if (product.categoryId === "cat_tracks") return automaticPrice(product.id, 50000, 5);
-  if (product.categoryId === "cat_tents") return automaticPrice(product.id, 150000, 14);
-  if (product.sku === "ADDON_ZORB_TPU") return automaticPrice(product.id, 30000, 5);
-  if (product.sku === "ADDON_BUMPER_BALL_TPU") return automaticPrice(product.id, 10000, 5);
-  return manualPrice(product.id);
+const prices: Price[] = productVariants.map((variant) => {
+  const product = products.find((item) => item.id === variant.productId);
+  return {
+    id: `price_${variant.id}`,
+    priceSetId: `pset_${variant.id}`,
+    currency: "PLN",
+    unitMode: "per_hour",
+    amountZloty: product ? hourlyAmountForProduct(product, variant) : 1000,
+    active: true,
+    createdAt,
+    updatedAt: createdAt,
+  };
 });
 
 const productAssets: ProductAsset[] = products.map((product) => ({
@@ -223,13 +231,13 @@ const bookings: Booking[] = [
     teardownEndAt: "2026-06-20T16:15:00.000Z",
     durationHours: 5,
     currency: "PLN",
-    subtotalGrosz: 100000,
-    travelFeeGrosz: 12000,
-    discountGrosz: 0,
-    totalGrosz: 112000,
+    subtotalZloty: 5000,
+    travelFeeZloty: 120,
+    discountZloty: 0,
+    totalZloty: 5120,
     manualPaymentStatus: "deposit_paid",
-    depositRequiredGrosz: 30000,
-    paidAmountGrosz: 30000,
+    depositRequiredZloty: 300,
+    paidAmountZloty: 300,
     paymentNotes: "Zaliczka zaksięgowana ręcznie.",
     paymentUpdatedAt: "2026-06-01T11:30:00.000Z",
     paymentUpdatedByAdminId: "admin_mock_owner",
@@ -248,11 +256,12 @@ const bookingItems: BookingItem[] = [
   {
     id: "book_item_demo_paid",
     bookingId: "book_demo_paid",
+    variantId: "variant_prod_play_morski",
     productId: "prod_play_morski",
     quantity: 1,
-    unitPriceGrosz: 100000,
-    extraHours: 0,
-    lineTotalGrosz: 100000,
+    hourlyPriceZloty: 1000,
+    billableHours: 5,
+    lineTotalZloty: 5000,
     createdAt,
     updatedAt: createdAt,
   },
@@ -265,7 +274,7 @@ const featureFlagTuples = [
   ["turnstile_required_public_forms", true, "Require Turnstile on public forms"],
   ["customer_booking_status_page_enabled", true, "Enable tokenized public status pages"],
   ["sms_notifications_enabled", false, "Enable SMS notification sending"],
-  ["food_machines_public_enabled", true, "Show manual-quote food machines publicly"],
+  ["food_machines_public_enabled", true, "Show food machines publicly"],
   ["supplier_url_visible_publicly", false, "Hide supplier URLs on public pages"],
 ] satisfies Array<[string, boolean, string]>;
 
@@ -326,8 +335,6 @@ const businessSettings: BusinessSettings = {
   publicEmail: "kontakt@dmuchance.lomza.pl",
   serviceAreaDescription: "Łomża, okolice i wybrane lokalizacje w województwie podlaskim po potwierdzeniu dojazdu.",
   defaultCurrency: "PLN",
-  defaultBaseHours: 5,
-  defaultExtraHourPercent: 20,
   bookingLeadTimeHours: 24,
   defaultSetupMinutes: 45,
   defaultTeardownMinutes: 45,
@@ -339,8 +346,10 @@ export function createInitialState(): MockState {
   return {
     categories: structuredClone(categories),
     products: structuredClone(products),
+    productVariants: structuredClone(productVariants),
     productAssets: structuredClone(productAssets),
-    priceRules: structuredClone(priceRules),
+    priceSets: structuredClone(priceSets),
+    prices: structuredClone(prices),
     customers: [
       {
         id: "cust_demo_company",
@@ -359,6 +368,7 @@ export function createInitialState(): MockState {
         customerId: "cust_demo_company",
         label: "Piknik firmowy",
         street: "ul. Testowa 12",
+        addressDetails: "Wjazd od strony parkingu",
         postalCode: "30-001",
         city: "Kraków",
         country: "PL",

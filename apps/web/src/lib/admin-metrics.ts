@@ -2,7 +2,7 @@ import { isActiveOrUpcomingDate, isUnpaidBooking } from "./admin-status";
 
 export type RequestLike = {
   status: string;
-  totalEstimateGrosz: number | null;
+  totalEstimateZloty: number | null;
   eventDate?: string;
 };
 
@@ -16,7 +16,7 @@ export type ProductLike = {
   active: boolean;
   publicVisible?: boolean;
   assets?: unknown[];
-  pricing?: { quoteMode?: string; basePriceGrosz?: number | null } | null;
+  pricing?: { hourlyPriceZloty?: number | null } | null;
 };
 
 export type NotificationLike = {
@@ -28,7 +28,7 @@ export function requestMetrics(requests: RequestLike[]) {
   return {
     pendingCount: pending.length,
     confirmedCount: requests.filter((request) => request.status === "confirmed").length,
-    pendingValueGrosz: pending.reduce((total, request) => total + (request.totalEstimateGrosz ?? 0), 0),
+    pendingValueZloty: pending.reduce((total, request) => total + (request.totalEstimateZloty ?? 0), 0),
   };
 }
 
@@ -48,8 +48,7 @@ export function productMetrics(products: ProductLike[]) {
     activeCount: products.filter((product) => product.active && product.publicVisible !== false).length,
     hiddenCount: products.filter((product) => !product.active || product.publicVisible === false).length,
     missingMediaCount: products.filter((product) => !product.assets || product.assets.length === 0).length,
-    manualPricingCount: products.filter((product) => product.pricing?.quoteMode === "manual").length,
-    missingPriceCount: products.filter((product) => product.pricing?.basePriceGrosz === null).length,
+    missingPriceCount: products.filter((product) => product.pricing?.hourlyPriceZloty === null || product.pricing?.hourlyPriceZloty === undefined).length,
   };
 }
 

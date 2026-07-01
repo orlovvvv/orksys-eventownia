@@ -1,8 +1,8 @@
 export type Currency = "PLN";
 
-export type QuoteMode = "automatic" | "manual" | "automatic_with_manual_travel_fee";
+export type QuoteMode = "automatic_with_manual_travel_fee" | "requires_hourly_price";
 
-export type ProductType = "rental_product" | "addon" | "manual_quote_extra";
+export type ProductType = "rental_product" | "addon" | "event_extra";
 
 export type OrderItemInput = {
   productId: string;
@@ -43,7 +43,6 @@ export type Category = {
 export type Product = {
   id: string;
   categoryId: string;
-  sku: string;
   slug: string;
   namePl: string;
   shortDescriptionPl: string;
@@ -57,9 +56,21 @@ export type Product = {
   setupMinutes: number;
   teardownMinutes: number;
   cleaningBufferMinutes: number;
-  inventoryCount: number;
   sortOrder: number;
   visualTone: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProductVariant = {
+  id: string;
+  productId: string;
+  sku: string;
+  title: string;
+  isDefault: boolean;
+  active: boolean;
+  inventoryCount: number;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -79,21 +90,47 @@ export type ProductAsset = {
   updatedAt: string;
 };
 
-export type PriceRule = {
+export type PriceSet = {
   id: string;
-  productId: string;
-  quoteMode: "automatic" | "manual";
-  unitMode: "per_booking" | "per_item" | "manual_quote";
-  currency: Currency;
-  basePriceGrosz: number | null;
-  baseHours: number | null;
-  extraHourPercent: number;
+  variantId: string;
   depositMode: "none" | "fixed" | "percent";
-  depositAmountGrosz: number | null;
+  depositAmountZloty: number | null;
   depositPercent: number | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type Price = {
+  id: string;
+  priceSetId: string;
+  currency: Currency;
+  unitMode: "per_hour";
+  amountZloty: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProductPricing = {
+  priceSetId: string;
+  priceId: string;
+  currency: Currency;
+  unitMode: "per_hour";
+  hourlyPriceZloty: number;
+  depositMode: "none" | "fixed" | "percent";
+  depositAmountZloty: number | null;
+  depositPercent: number | null;
+};
+
+export type PublicProduct = Product & {
+  sku: string;
+  inventoryCount: number;
+  defaultVariant: ProductVariant | null;
+  category: Category | null;
+  pricing: ProductPricing | null;
+  assets: ProductAsset[];
+  supplierUrl?: undefined;
 };
 
 export type Customer = {
@@ -112,6 +149,7 @@ export type Location = {
   customerId: string | null;
   label: string | null;
   street: string;
+  addressDetails: string | null;
   postalCode: string;
   city: string;
   country: "PL";
@@ -123,16 +161,46 @@ export type Location = {
 };
 
 export type QuoteLine = {
+  variantId: string | null;
   sku: string;
   productId: string;
   name: string;
   quantity: number;
-  quoteMode: "automatic" | "manual";
-  basePriceGrosz: number | null;
-  baseHours: number | null;
-  extraHours: number;
-  extraHourPriceGrosz: number | null;
-  lineTotalGrosz: number | null;
+  hourlyPriceZloty: number | null;
+  billableHours: number;
+  lineTotalZloty: number | null;
+  pricingStatus: "priced" | "missing_hourly_price";
+};
+
+export type EstimateSummaryLine = {
+  variantId: string | null;
+  productId: string;
+  sku: string;
+  name: string;
+  quantity: number;
+  hourlyPriceZloty: number | null;
+  billableHours: number;
+  lineTotalZloty: number | null;
+  pricingStatus: "priced" | "missing_hourly_price";
+};
+
+export type EstimateSummary = {
+  currency: Currency;
+  billableHours: number;
+  lines: EstimateSummaryLine[];
+  itemsSubtotalZloty: number;
+  travel: {
+    mode: "manual_distance";
+    amountZloty: number | null;
+    label: string;
+    message: string;
+  };
+  discountZloty: number;
+  finalQuote: {
+    status: "pending_manual_distance" | "finalized";
+    totalZloty: number | null;
+    message: string;
+  };
 };
 
 export type Quote = {
@@ -141,13 +209,14 @@ export type Quote = {
   currency: Currency;
   durationHours: number;
   lines: QuoteLine[];
-  subtotalGrosz: number;
+  estimateSummary: EstimateSummary;
+  subtotalZloty: number;
   travelFee: {
     mode: "manual" | "free" | "zone" | "distance";
-    amountGrosz: number | null;
+    amountZloty: number | null;
     label: string;
   };
-  totalEstimateGrosz: number | null;
+  totalEstimateZloty: number | null;
   warnings: string[];
   event: {
     date: string;
@@ -161,12 +230,13 @@ export type Quote = {
 export type RentalRequestItem = {
   id: string;
   rentalRequestId: string;
+  variantId: string | null;
   productId: string;
   quantity: number;
-  unitPriceGrosz: number | null;
-  extraHours: number;
-  lineTotalGrosz: number | null;
-  quoteMode: "automatic" | "manual";
+  hourlyPriceZloty: number | null;
+  billableHours: number;
+  lineTotalZloty: number | null;
+  pricingStatus: "priced" | "missing_hourly_price";
   createdAt: string;
   updatedAt: string;
 };
@@ -181,10 +251,10 @@ export type RentalRequest = {
   startTime: string;
   durationHours: number;
   quoteMode: QuoteMode;
-  subtotalGrosz: number;
-  travelFeeGrosz: number | null;
-  discountGrosz: number;
-  totalEstimateGrosz: number | null;
+  subtotalZloty: number;
+  travelFeeZloty: number | null;
+  discountZloty: number;
+  totalEstimateZloty: number | null;
   message: string | null;
   source: "website" | "admin";
   turnstileVerifiedAt: string | null;
@@ -198,11 +268,12 @@ export type RentalRequest = {
 export type BookingItem = {
   id: string;
   bookingId: string;
+  variantId: string | null;
   productId: string;
   quantity: number;
-  unitPriceGrosz: number;
-  extraHours: number;
-  lineTotalGrosz: number;
+  hourlyPriceZloty: number;
+  billableHours: number;
+  lineTotalZloty: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -220,13 +291,13 @@ export type Booking = {
   teardownEndAt: string;
   durationHours: number;
   currency: Currency;
-  subtotalGrosz: number;
-  travelFeeGrosz: number;
-  discountGrosz: number;
-  totalGrosz: number;
+  subtotalZloty: number;
+  travelFeeZloty: number;
+  discountZloty: number;
+  totalZloty: number;
   manualPaymentStatus: ManualPaymentStatus;
-  depositRequiredGrosz: number;
-  paidAmountGrosz: number;
+  depositRequiredZloty: number;
+  paidAmountZloty: number;
   paymentNotes: string | null;
   paymentUpdatedAt: string | null;
   paymentUpdatedByAdminId: string | null;
@@ -329,8 +400,6 @@ export type BusinessSettings = {
   publicEmail: string;
   serviceAreaDescription: string;
   defaultCurrency: Currency;
-  defaultBaseHours: number;
-  defaultExtraHourPercent: number;
   bookingLeadTimeHours: number;
   defaultSetupMinutes: number;
   defaultTeardownMinutes: number;
@@ -350,8 +419,10 @@ export type AnalyticsEvent = {
 export type MockState = {
   categories: Category[];
   products: Product[];
+  productVariants: ProductVariant[];
   productAssets: ProductAsset[];
-  priceRules: PriceRule[];
+  priceSets: PriceSet[];
+  prices: Price[];
   customers: Customer[];
   locations: Location[];
   quotes: Quote[];

@@ -30,7 +30,7 @@ import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { trpc } from "@/utils/trpc";
 
-export const Route = createFileRoute("/produkty/")({
+export const Route = createFileRoute("/products/")({
   component: ProductsRoute,
 });
 
@@ -45,7 +45,7 @@ function ProductsRoute() {
   const [category, setCategory] = useState("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("recommended");
-  const [maxPrice, setMaxPrice] = useState([300000]);
+  const [maxPrice, setMaxPrice] = useState([3000]);
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const categories = useQuery(trpc.catalog.categories.queryOptions());
@@ -61,16 +61,16 @@ function ProductsRoute() {
           .join(" ")
           .toLowerCase()
           .includes(q.toLowerCase());
-        const price = product.pricing?.basePriceGrosz ?? 0;
+        const price = product.pricing?.hourlyPriceZloty ?? 0;
         const priceMatches = price === 0 || price <= maxPrice[0];
         return categoryMatches && textMatches && priceMatches;
       }) ?? [];
 
     return items.sort((a, b) => {
       if (sort === "price-asc") {
-        return (a?.pricing?.basePriceGrosz ?? Number.MAX_SAFE_INTEGER) - (b?.pricing?.basePriceGrosz ?? Number.MAX_SAFE_INTEGER);
+        return (a?.pricing?.hourlyPriceZloty ?? Number.MAX_SAFE_INTEGER) - (b?.pricing?.hourlyPriceZloty ?? Number.MAX_SAFE_INTEGER);
       }
-      if (sort === "price-desc") return (b?.pricing?.basePriceGrosz ?? 0) - (a?.pricing?.basePriceGrosz ?? 0);
+      if (sort === "price-desc") return (b?.pricing?.hourlyPriceZloty ?? 0) - (a?.pricing?.hourlyPriceZloty ?? 0);
       if (sort === "name") return (a?.namePl ?? "").localeCompare(b?.namePl ?? "", "pl");
       return (a?.sortOrder ?? 0) - (b?.sortOrder ?? 0);
     });
@@ -271,17 +271,17 @@ function FilterControls({
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Zakres cenowy</div>
+        <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Stawka godzinowa</div>
         <Slider
           value={maxPrice}
           min={0}
-          max={300000}
-          step={5000}
+          max={3000}
+          step={50}
           onValueChange={(value) => setMaxPrice(value as number[])}
         />
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>0 zł</span>
-          <span>{Math.round(maxPrice[0] / 100)} zł</span>
+          <span>{maxPrice[0]} zł/h</span>
         </div>
       </div>
     </div>

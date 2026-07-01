@@ -9,16 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WynajemRouteImport } from './routes/wynajem'
 import { Route as TodosRouteImport } from './routes/todos'
-import { Route as RegulaminRouteImport } from './routes/regulamin'
-import { Route as ProduktyRouteImport } from './routes/produkty'
-import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ProductsRouteImport } from './routes/products'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as NamiotImprezowyWynajemRouteImport } from './routes/namiot-imprezowy-wynajem'
 import { Route as MaszynaDoWatyCukrowejWynajemRouteImport } from './routes/maszyna-do-waty-cukrowej-wynajem'
 import { Route as MaszynaDoPopcornuWynajemRouteImport } from './routes/maszyna-do-popcornu-wynajem'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DmuchaneZjezdzalnieWynajemRouteImport } from './routes/dmuchane-zjezdzalnie-wynajem'
 import { Route as DmuchanePlaceZabawWynajemRouteImport } from './routes/dmuchane-place-zabaw-wynajem'
@@ -27,13 +25,15 @@ import { Route as DmuchanceNaKomunieRouteImport } from './routes/dmuchance-na-ko
 import { Route as DmuchanceNaFestynyRouteImport } from './routes/dmuchance-na-festyny'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CartRouteImport } from './routes/cart'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProduktyIndexRouteImport } from './routes/produkty.index'
+import { Route as ProductsIndexRouteImport } from './routes/products.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as RezerwacjaPublicTokenRouteImport } from './routes/rezerwacja.$publicToken'
-import { Route as ProduktySlugRouteImport } from './routes/produkty.$slug'
-import { Route as KategorieSlugRouteImport } from './routes/kategorie.$slug'
+import { Route as ReservationPublicTokenRouteImport } from './routes/reservation.$publicToken'
+import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as CategoriesSlugRouteImport } from './routes/categories.$slug'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminRequestsRouteImport } from './routes/admin.requests'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
@@ -53,29 +53,24 @@ import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
 import { Route as AdminBookingsIdRouteImport } from './routes/admin.bookings.$id'
 
-const WynajemRoute = WynajemRouteImport.update({
-  id: '/wynajem',
-  path: '/wynajem',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RegulaminRoute = RegulaminRouteImport.update({
-  id: '/regulamin',
-  path: '/regulamin',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProduktyRoute = ProduktyRouteImport.update({
-  id: '/produkty',
-  path: '/produkty',
+const ProductsRoute = ProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PolitykaPrywatnosciRoute = PolitykaPrywatnosciRouteImport.update({
-  id: '/polityka-prywatnosci',
-  path: '/polityka-prywatnosci',
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NamiotImprezowyWynajemRoute = NamiotImprezowyWynajemRouteImport.update({
@@ -98,11 +93,6 @@ const MaszynaDoPopcornuWynajemRoute =
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KontaktRoute = KontaktRouteImport.update({
-  id: '/kontakt',
-  path: '/kontakt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -147,6 +137,16 @@ const CookiesRoute = CookiesRouteImport.update({
   path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -157,29 +157,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProduktyIndexRoute = ProduktyIndexRouteImport.update({
+const ProductsIndexRoute = ProductsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => ProduktyRoute,
+  getParentRoute: () => ProductsRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const RezerwacjaPublicTokenRoute = RezerwacjaPublicTokenRouteImport.update({
-  id: '/rezerwacja/$publicToken',
-  path: '/rezerwacja/$publicToken',
+const ReservationPublicTokenRoute = ReservationPublicTokenRouteImport.update({
+  id: '/reservation/$publicToken',
+  path: '/reservation/$publicToken',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProduktySlugRoute = ProduktySlugRouteImport.update({
+const ProductsSlugRoute = ProductsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
-  getParentRoute: () => ProduktyRoute,
+  getParentRoute: () => ProductsRoute,
 } as any)
-const KategorieSlugRoute = KategorieSlugRouteImport.update({
-  id: '/kategorie/$slug',
-  path: '/kategorie/$slug',
+const CategoriesSlugRoute = CategoriesSlugRouteImport.update({
+  id: '/categories/$slug',
+  path: '/categories/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -276,6 +276,8 @@ const AdminBookingsIdRoute = AdminBookingsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/cart': typeof CartRoute
+  '/contact': typeof ContactRoute
   '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRoute
   '/dmuchance-na-festyny': typeof DmuchanceNaFestynyRoute
@@ -284,16 +286,14 @@ export interface FileRoutesByFullPath {
   '/dmuchane-place-zabaw-wynajem': typeof DmuchanePlaceZabawWynajemRoute
   '/dmuchane-zjezdzalnie-wynajem': typeof DmuchaneZjezdzalnieWynajemRoute
   '/faq': typeof FaqRoute
-  '/kontakt': typeof KontaktRoute
   '/login': typeof LoginRoute
   '/maszyna-do-popcornu-wynajem': typeof MaszynaDoPopcornuWynajemRoute
   '/maszyna-do-waty-cukrowej-wynajem': typeof MaszynaDoWatyCukrowejWynajemRoute
   '/namiot-imprezowy-wynajem': typeof NamiotImprezowyWynajemRoute
-  '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
-  '/produkty': typeof ProduktyRouteWithChildren
-  '/regulamin': typeof RegulaminRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/products': typeof ProductsRouteWithChildren
+  '/terms': typeof TermsRoute
   '/todos': typeof TodosRoute
-  '/wynajem': typeof WynajemRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/availability': typeof AdminAvailabilityRoute
   '/admin/bookings': typeof AdminBookingsRouteWithChildren
@@ -304,11 +304,11 @@ export interface FileRoutesByFullPath {
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/requests': typeof AdminRequestsRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
-  '/kategorie/$slug': typeof KategorieSlugRoute
-  '/produkty/$slug': typeof ProduktySlugRoute
-  '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/categories/$slug': typeof CategoriesSlugRoute
+  '/products/$slug': typeof ProductsSlugRoute
+  '/reservation/$publicToken': typeof ReservationPublicTokenRoute
   '/admin/': typeof AdminIndexRoute
-  '/produkty/': typeof ProduktyIndexRoute
+  '/products/': typeof ProductsIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -320,6 +320,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cart': typeof CartRoute
+  '/contact': typeof ContactRoute
   '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRoute
   '/dmuchance-na-festyny': typeof DmuchanceNaFestynyRoute
@@ -328,26 +330,24 @@ export interface FileRoutesByTo {
   '/dmuchane-place-zabaw-wynajem': typeof DmuchanePlaceZabawWynajemRoute
   '/dmuchane-zjezdzalnie-wynajem': typeof DmuchaneZjezdzalnieWynajemRoute
   '/faq': typeof FaqRoute
-  '/kontakt': typeof KontaktRoute
   '/login': typeof LoginRoute
   '/maszyna-do-popcornu-wynajem': typeof MaszynaDoPopcornuWynajemRoute
   '/maszyna-do-waty-cukrowej-wynajem': typeof MaszynaDoWatyCukrowejWynajemRoute
   '/namiot-imprezowy-wynajem': typeof NamiotImprezowyWynajemRoute
-  '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
-  '/regulamin': typeof RegulaminRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/terms': typeof TermsRoute
   '/todos': typeof TodosRoute
-  '/wynajem': typeof WynajemRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/availability': typeof AdminAvailabilityRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/kategorie/$slug': typeof KategorieSlugRoute
-  '/produkty/$slug': typeof ProduktySlugRoute
-  '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/categories/$slug': typeof CategoriesSlugRoute
+  '/products/$slug': typeof ProductsSlugRoute
+  '/reservation/$publicToken': typeof ReservationPublicTokenRoute
   '/admin': typeof AdminIndexRoute
-  '/produkty': typeof ProduktyIndexRoute
+  '/products': typeof ProductsIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -361,6 +361,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/cart': typeof CartRoute
+  '/contact': typeof ContactRoute
   '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRoute
   '/dmuchance-na-festyny': typeof DmuchanceNaFestynyRoute
@@ -369,16 +371,14 @@ export interface FileRoutesById {
   '/dmuchane-place-zabaw-wynajem': typeof DmuchanePlaceZabawWynajemRoute
   '/dmuchane-zjezdzalnie-wynajem': typeof DmuchaneZjezdzalnieWynajemRoute
   '/faq': typeof FaqRoute
-  '/kontakt': typeof KontaktRoute
   '/login': typeof LoginRoute
   '/maszyna-do-popcornu-wynajem': typeof MaszynaDoPopcornuWynajemRoute
   '/maszyna-do-waty-cukrowej-wynajem': typeof MaszynaDoWatyCukrowejWynajemRoute
   '/namiot-imprezowy-wynajem': typeof NamiotImprezowyWynajemRoute
-  '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
-  '/produkty': typeof ProduktyRouteWithChildren
-  '/regulamin': typeof RegulaminRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/products': typeof ProductsRouteWithChildren
+  '/terms': typeof TermsRoute
   '/todos': typeof TodosRoute
-  '/wynajem': typeof WynajemRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/availability': typeof AdminAvailabilityRoute
   '/admin/bookings': typeof AdminBookingsRouteWithChildren
@@ -389,11 +389,11 @@ export interface FileRoutesById {
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/requests': typeof AdminRequestsRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
-  '/kategorie/$slug': typeof KategorieSlugRoute
-  '/produkty/$slug': typeof ProduktySlugRoute
-  '/rezerwacja/$publicToken': typeof RezerwacjaPublicTokenRoute
+  '/categories/$slug': typeof CategoriesSlugRoute
+  '/products/$slug': typeof ProductsSlugRoute
+  '/reservation/$publicToken': typeof ReservationPublicTokenRoute
   '/admin/': typeof AdminIndexRoute
-  '/produkty/': typeof ProduktyIndexRoute
+  '/products/': typeof ProductsIndexRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -408,6 +408,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/cart'
+    | '/contact'
     | '/cookies'
     | '/dashboard'
     | '/dmuchance-na-festyny'
@@ -416,16 +418,14 @@ export interface FileRouteTypes {
     | '/dmuchane-place-zabaw-wynajem'
     | '/dmuchane-zjezdzalnie-wynajem'
     | '/faq'
-    | '/kontakt'
     | '/login'
     | '/maszyna-do-popcornu-wynajem'
     | '/maszyna-do-waty-cukrowej-wynajem'
     | '/namiot-imprezowy-wynajem'
-    | '/polityka-prywatnosci'
-    | '/produkty'
-    | '/regulamin'
+    | '/privacy-policy'
+    | '/products'
+    | '/terms'
     | '/todos'
-    | '/wynajem'
     | '/admin/audit'
     | '/admin/availability'
     | '/admin/bookings'
@@ -436,11 +436,11 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/requests'
     | '/admin/settings'
-    | '/kategorie/$slug'
-    | '/produkty/$slug'
-    | '/rezerwacja/$publicToken'
+    | '/categories/$slug'
+    | '/products/$slug'
+    | '/reservation/$publicToken'
     | '/admin/'
-    | '/produkty/'
+    | '/products/'
     | '/admin/bookings/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
@@ -452,6 +452,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cart'
+    | '/contact'
     | '/cookies'
     | '/dashboard'
     | '/dmuchance-na-festyny'
@@ -460,26 +462,24 @@ export interface FileRouteTypes {
     | '/dmuchane-place-zabaw-wynajem'
     | '/dmuchane-zjezdzalnie-wynajem'
     | '/faq'
-    | '/kontakt'
     | '/login'
     | '/maszyna-do-popcornu-wynajem'
     | '/maszyna-do-waty-cukrowej-wynajem'
     | '/namiot-imprezowy-wynajem'
-    | '/polityka-prywatnosci'
-    | '/regulamin'
+    | '/privacy-policy'
+    | '/terms'
     | '/todos'
-    | '/wynajem'
     | '/admin/audit'
     | '/admin/availability'
     | '/admin/calendar'
     | '/admin/payments'
     | '/admin/pricing'
     | '/admin/settings'
-    | '/kategorie/$slug'
-    | '/produkty/$slug'
-    | '/rezerwacja/$publicToken'
+    | '/categories/$slug'
+    | '/products/$slug'
+    | '/reservation/$publicToken'
     | '/admin'
-    | '/produkty'
+    | '/products'
     | '/admin/bookings/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
@@ -492,6 +492,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/cart'
+    | '/contact'
     | '/cookies'
     | '/dashboard'
     | '/dmuchance-na-festyny'
@@ -500,16 +502,14 @@ export interface FileRouteTypes {
     | '/dmuchane-place-zabaw-wynajem'
     | '/dmuchane-zjezdzalnie-wynajem'
     | '/faq'
-    | '/kontakt'
     | '/login'
     | '/maszyna-do-popcornu-wynajem'
     | '/maszyna-do-waty-cukrowej-wynajem'
     | '/namiot-imprezowy-wynajem'
-    | '/polityka-prywatnosci'
-    | '/produkty'
-    | '/regulamin'
+    | '/privacy-policy'
+    | '/products'
+    | '/terms'
     | '/todos'
-    | '/wynajem'
     | '/admin/audit'
     | '/admin/availability'
     | '/admin/bookings'
@@ -520,11 +520,11 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/requests'
     | '/admin/settings'
-    | '/kategorie/$slug'
-    | '/produkty/$slug'
-    | '/rezerwacja/$publicToken'
+    | '/categories/$slug'
+    | '/products/$slug'
+    | '/reservation/$publicToken'
     | '/admin/'
-    | '/produkty/'
+    | '/products/'
     | '/admin/bookings/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
@@ -538,6 +538,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  CartRoute: typeof CartRoute
+  ContactRoute: typeof ContactRoute
   CookiesRoute: typeof CookiesRoute
   DashboardRoute: typeof DashboardRoute
   DmuchanceNaFestynyRoute: typeof DmuchanceNaFestynyRoute
@@ -546,29 +548,20 @@ export interface RootRouteChildren {
   DmuchanePlaceZabawWynajemRoute: typeof DmuchanePlaceZabawWynajemRoute
   DmuchaneZjezdzalnieWynajemRoute: typeof DmuchaneZjezdzalnieWynajemRoute
   FaqRoute: typeof FaqRoute
-  KontaktRoute: typeof KontaktRoute
   LoginRoute: typeof LoginRoute
   MaszynaDoPopcornuWynajemRoute: typeof MaszynaDoPopcornuWynajemRoute
   MaszynaDoWatyCukrowejWynajemRoute: typeof MaszynaDoWatyCukrowejWynajemRoute
   NamiotImprezowyWynajemRoute: typeof NamiotImprezowyWynajemRoute
-  PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
-  ProduktyRoute: typeof ProduktyRouteWithChildren
-  RegulaminRoute: typeof RegulaminRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  ProductsRoute: typeof ProductsRouteWithChildren
+  TermsRoute: typeof TermsRoute
   TodosRoute: typeof TodosRoute
-  WynajemRoute: typeof WynajemRoute
-  KategorieSlugRoute: typeof KategorieSlugRoute
-  RezerwacjaPublicTokenRoute: typeof RezerwacjaPublicTokenRoute
+  CategoriesSlugRoute: typeof CategoriesSlugRoute
+  ReservationPublicTokenRoute: typeof ReservationPublicTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/wynajem': {
-      id: '/wynajem'
-      path: '/wynajem'
-      fullPath: '/wynajem'
-      preLoaderRoute: typeof WynajemRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/todos': {
       id: '/todos'
       path: '/todos'
@@ -576,25 +569,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TodosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/regulamin': {
-      id: '/regulamin'
-      path: '/regulamin'
-      fullPath: '/regulamin'
-      preLoaderRoute: typeof RegulaminRouteImport
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/produkty': {
-      id: '/produkty'
-      path: '/produkty'
-      fullPath: '/produkty'
-      preLoaderRoute: typeof ProduktyRouteImport
+    '/products': {
+      id: '/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof ProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/polityka-prywatnosci': {
-      id: '/polityka-prywatnosci'
-      path: '/polityka-prywatnosci'
-      fullPath: '/polityka-prywatnosci'
-      preLoaderRoute: typeof PolitykaPrywatnosciRouteImport
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/namiot-imprezowy-wynajem': {
@@ -623,13 +616,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kontakt': {
-      id: '/kontakt'
-      path: '/kontakt'
-      fullPath: '/kontakt'
-      preLoaderRoute: typeof KontaktRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -688,6 +674,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -702,12 +702,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/produkty/': {
-      id: '/produkty/'
+    '/products/': {
+      id: '/products/'
       path: '/'
-      fullPath: '/produkty/'
-      preLoaderRoute: typeof ProduktyIndexRouteImport
-      parentRoute: typeof ProduktyRoute
+      fullPath: '/products/'
+      preLoaderRoute: typeof ProductsIndexRouteImport
+      parentRoute: typeof ProductsRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -716,25 +716,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/rezerwacja/$publicToken': {
-      id: '/rezerwacja/$publicToken'
-      path: '/rezerwacja/$publicToken'
-      fullPath: '/rezerwacja/$publicToken'
-      preLoaderRoute: typeof RezerwacjaPublicTokenRouteImport
+    '/reservation/$publicToken': {
+      id: '/reservation/$publicToken'
+      path: '/reservation/$publicToken'
+      fullPath: '/reservation/$publicToken'
+      preLoaderRoute: typeof ReservationPublicTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/produkty/$slug': {
-      id: '/produkty/$slug'
+    '/products/$slug': {
+      id: '/products/$slug'
       path: '/$slug'
-      fullPath: '/produkty/$slug'
-      preLoaderRoute: typeof ProduktySlugRouteImport
-      parentRoute: typeof ProduktyRoute
+      fullPath: '/products/$slug'
+      preLoaderRoute: typeof ProductsSlugRouteImport
+      parentRoute: typeof ProductsRoute
     }
-    '/kategorie/$slug': {
-      id: '/kategorie/$slug'
-      path: '/kategorie/$slug'
-      fullPath: '/kategorie/$slug'
-      preLoaderRoute: typeof KategorieSlugRouteImport
+    '/categories/$slug': {
+      id: '/categories/$slug'
+      path: '/categories/$slug'
+      fullPath: '/categories/$slug'
+      preLoaderRoute: typeof CategoriesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/settings': {
@@ -952,23 +952,25 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface ProduktyRouteChildren {
-  ProduktySlugRoute: typeof ProduktySlugRoute
-  ProduktyIndexRoute: typeof ProduktyIndexRoute
+interface ProductsRouteChildren {
+  ProductsSlugRoute: typeof ProductsSlugRoute
+  ProductsIndexRoute: typeof ProductsIndexRoute
 }
 
-const ProduktyRouteChildren: ProduktyRouteChildren = {
-  ProduktySlugRoute: ProduktySlugRoute,
-  ProduktyIndexRoute: ProduktyIndexRoute,
+const ProductsRouteChildren: ProductsRouteChildren = {
+  ProductsSlugRoute: ProductsSlugRoute,
+  ProductsIndexRoute: ProductsIndexRoute,
 }
 
-const ProduktyRouteWithChildren = ProduktyRoute._addFileChildren(
-  ProduktyRouteChildren,
+const ProductsRouteWithChildren = ProductsRoute._addFileChildren(
+  ProductsRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  CartRoute: CartRoute,
+  ContactRoute: ContactRoute,
   CookiesRoute: CookiesRoute,
   DashboardRoute: DashboardRoute,
   DmuchanceNaFestynyRoute: DmuchanceNaFestynyRoute,
@@ -977,18 +979,16 @@ const rootRouteChildren: RootRouteChildren = {
   DmuchanePlaceZabawWynajemRoute: DmuchanePlaceZabawWynajemRoute,
   DmuchaneZjezdzalnieWynajemRoute: DmuchaneZjezdzalnieWynajemRoute,
   FaqRoute: FaqRoute,
-  KontaktRoute: KontaktRoute,
   LoginRoute: LoginRoute,
   MaszynaDoPopcornuWynajemRoute: MaszynaDoPopcornuWynajemRoute,
   MaszynaDoWatyCukrowejWynajemRoute: MaszynaDoWatyCukrowejWynajemRoute,
   NamiotImprezowyWynajemRoute: NamiotImprezowyWynajemRoute,
-  PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
-  ProduktyRoute: ProduktyRouteWithChildren,
-  RegulaminRoute: RegulaminRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  ProductsRoute: ProductsRouteWithChildren,
+  TermsRoute: TermsRoute,
   TodosRoute: TodosRoute,
-  WynajemRoute: WynajemRoute,
-  KategorieSlugRoute: KategorieSlugRoute,
-  RezerwacjaPublicTokenRoute: RezerwacjaPublicTokenRoute,
+  CategoriesSlugRoute: CategoriesSlugRoute,
+  ReservationPublicTokenRoute: ReservationPublicTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

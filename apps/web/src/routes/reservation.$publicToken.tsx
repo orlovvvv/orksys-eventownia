@@ -6,12 +6,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { EstimateSummaryView } from "@/components/estimate-summary";
 import { Money } from "@/components/money";
 import { StatusBadge } from "@/components/status-badge";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { queryClient, trpc } from "@/utils/trpc";
 
-export const Route = createFileRoute("/rezerwacja/$publicToken")({
+export const Route = createFileRoute("/reservation/$publicToken")({
   component: PublicStatusRoute,
 });
 
@@ -31,6 +32,7 @@ function PublicStatusRoute() {
 
   const data = status.data;
   const isBooking = status.data.kind === "booking";
+  const addressLine = [data.location?.street, data.location?.addressDetails].filter(Boolean).join(", ");
 
   return (
     <main className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-10 md:px-6">
@@ -53,7 +55,7 @@ function PublicStatusRoute() {
           <div>
             <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Lokalizacja</div>
             <div>{data.location?.city}, {data.location?.postalCode}</div>
-            <div className="text-sm text-muted-foreground">{data.location?.street}</div>
+            <div className="text-sm text-muted-foreground">{addressLine}</div>
           </div>
           {isBooking ? (
             <>
@@ -63,12 +65,12 @@ function PublicStatusRoute() {
               </div>
               <div>
                 <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Razem</div>
-                <Money amountGrosz={data.totalGrosz} />
+                <Money amountZloty={data.totalZloty} />
               </div>
               <div>
                 <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Rozliczenie</div>
                 <StatusBadge status={data.manualPaymentStatus} />
-                {data.paidAmountGrosz > 0 ? <div className="mt-1 text-sm text-muted-foreground">Wpłacono: <Money amountGrosz={data.paidAmountGrosz} /></div> : null}
+                {data.paidAmountZloty > 0 ? <div className="mt-1 text-sm text-muted-foreground">Wpłacono: <Money amountZloty={data.paidAmountZloty} /></div> : null}
               </div>
             </>
           ) : (
@@ -78,29 +80,14 @@ function PublicStatusRoute() {
                 <div>{formatDate(data.eventDate)} {data.startTime}</div>
               </div>
               <div>
-                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Wstępna wycena</div>
-                <Money amountGrosz={data.totalGrosz} />
+                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Produkty razem</div>
+                <Money amountZloty={data.estimateSummary.itemsSubtotalZloty} />
               </div>
             </>
           )}
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Pozycje</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {data.items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-4 rounded-xl bg-muted p-3">
-              <div>
-                <div className="font-semibold">{item.product?.namePl ?? "Pozycja"}</div>
-                <div className="text-sm text-muted-foreground">Ilość: {item.quantity}</div>
-              </div>
-              <Money amountGrosz={item.lineTotalGrosz} />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <EstimateSummaryView summary={data.estimateSummary} />
       <Card>
         <CardHeader>
           <CardTitle>Anulowanie lub zmiana</CardTitle>
@@ -109,7 +96,7 @@ function PublicStatusRoute() {
           <Textarea value={reason} onChange={(event) => setReason(event.target.value)} />
           <div className="flex flex-wrap gap-2">
             <Button variant="destructive" onClick={() => cancelMutation.mutate({ publicToken, reason })}>Poproś o anulowanie</Button>
-            <Button variant="outline" render={<Link to="/kontakt" />}>Kontakt</Button>
+            <Button variant="outline" render={<Link to="/contact" />}>Kontakt</Button>
           </div>
         </CardContent>
       </Card>
