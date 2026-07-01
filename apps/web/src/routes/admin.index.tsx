@@ -3,7 +3,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@orksys-eventownia/ui/components/table";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, Bell, CalendarDays, CreditCard, Download, ImageOff, Inbox, Plus } from "lucide-react";
+import { AlertTriangle, Bell, CalendarDays, Download, ImageOff, Inbox, Plus, WalletCards } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminKpiCard } from "@/components/admin-kpi-card";
@@ -28,14 +28,14 @@ function AdminDashboardRoute() {
       label: "Zapytania do wyceny",
       value: cards?.pendingRequests ?? 0,
       description: "Wymagają kontaktu, korekty dojazdu albo potwierdzenia terminu.",
-      to: "/admin/requests",
+      to: "/admin/orders",
       tone: "primary",
     },
     {
-      label: "Rezerwacje bez wpłaty",
+      label: "Ręczne rozliczenia",
       value: cards?.awaitingPayment ?? 0,
-      description: "Sprawdź linki płatności i przelewy przed realizacją.",
-      to: "/admin/payments",
+      description: "Sprawdź status wpłat oznaczanych ręcznie przy rezerwacjach.",
+      to: "/admin/orders",
       tone: "warning",
     },
     {
@@ -65,7 +65,7 @@ function AdminDashboardRoute() {
           variant: "outline",
           onClick: () => toast.info("Raport jest elementem makiety i nie generuje pliku."),
         },
-        { label: "Nowa rezerwacja", icon: Plus, to: "/admin/bookings", variant: "default" },
+        { label: "Zamówienia", icon: Plus, to: "/admin/orders", variant: "default" },
       ]}
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -84,10 +84,10 @@ function AdminDashboardRoute() {
           tone="neutral"
         />
         <AdminKpiCard
-          label="Płatności"
+          label="Rozliczenia"
           value={cards?.awaitingPayment ?? 0}
-          detail="Wymagają kontroli"
-          icon={CreditCard}
+          detail="Ręczne statusy"
+          icon={WalletCards}
           tone="warning"
         />
         <AdminKpiCard
@@ -112,7 +112,7 @@ function AdminDashboardRoute() {
             <CardTitle>Ostatnie zapytania</CardTitle>
             <CardDescription>Krótka lista spraw, które najczęściej wymagają decyzji operatora.</CardDescription>
             <CardAction>
-              <Button variant="ghost" size="sm" render={<Link to="/admin/requests" />}>
+              <Button variant="ghost" size="sm" render={<Link to="/admin/orders" />}>
                 Wszystkie
               </Button>
             </CardAction>
@@ -151,7 +151,7 @@ function AdminDashboardRoute() {
                         <Money amountGrosz={request.totalEstimateGrosz} />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" render={<Link to="/admin/requests/$id" params={{ id: request.id }} />}>
+                        <Button variant="outline" size="sm" render={<Link to="/admin/orders/$id" params={{ id: request.id }} />}>
                           Otwórz
                         </Button>
                       </TableCell>
@@ -180,7 +180,7 @@ function AdminDashboardRoute() {
                   booking ? (
                     <Link
                       key={booking.id}
-                      to="/admin/bookings/$id"
+                      to="/admin/orders/$id"
                       params={{ id: booking.id }}
                       className="flex gap-3 rounded-xl border border-border/60 bg-card p-3 transition-colors hover:bg-muted/50"
                     >

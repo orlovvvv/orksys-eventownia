@@ -4,21 +4,19 @@ export type QuoteMode = "automatic" | "manual" | "automatic_with_manual_travel_f
 
 export type ProductType = "rental_product" | "addon" | "manual_quote_extra";
 
-export type PaymentStatus =
+export type OrderItemInput = {
+  productId: string;
+  quantity: number;
+};
+
+export type ManualPaymentStatus =
   | "not_required"
-  | "checkout_created"
-  | "pending"
-  | "paid"
-  | "failed"
-  | "expired"
-  | "refunded";
+  | "unpaid"
+  | "deposit_paid"
+  | "paid";
 
 export type BookingStatus =
-  | "confirmed_unpaid"
-  | "payment_pending"
-  | "confirmed_deposit_paid"
-  | "confirmed_paid"
-  | "confirmed_cash_or_bank_transfer"
+  | "confirmed"
   | "in_progress"
   | "completed"
   | "cancelled_by_customer"
@@ -226,7 +224,12 @@ export type Booking = {
   travelFeeGrosz: number;
   discountGrosz: number;
   totalGrosz: number;
+  manualPaymentStatus: ManualPaymentStatus;
   depositRequiredGrosz: number;
+  paidAmountGrosz: number;
+  paymentNotes: string | null;
+  paymentUpdatedAt: string | null;
+  paymentUpdatedByAdminId: string | null;
   confirmedAt: string | null;
   expiresAt: string | null;
   adminNotes: string | null;
@@ -247,37 +250,6 @@ export type AvailabilityBlock = {
   createdByAdminId: string | null;
   createdAt: string;
   updatedAt: string;
-};
-
-export type Payment = {
-  id: string;
-  bookingId: string;
-  provider: "stripe" | "przelewy24" | "bank_transfer" | "cash";
-  purpose: "deposit" | "full_payment" | "refund";
-  status: PaymentStatus;
-  amountGrosz: number;
-  currency: Currency;
-  providerSessionId: string | null;
-  providerPaymentIntentId: string | null;
-  checkoutUrl: string | null;
-  expiresAt: string | null;
-  paidAt: string | null;
-  refundedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PaymentEvent = {
-  id: string;
-  provider: Payment["provider"];
-  providerEventId: string;
-  eventType: string;
-  paymentId: string | null;
-  bookingId: string | null;
-  payloadJson: string;
-  receivedAt: string;
-  processedAt: string | null;
-  processingError: string | null;
 };
 
 export type Notification = {
@@ -364,7 +336,6 @@ export type BusinessSettings = {
   defaultTeardownMinutes: number;
   requireAdminConfirmation: boolean;
   requestExpirationDays: number;
-  paymentLinkExpirationHours: number;
 };
 
 export type AnalyticsEvent = {
@@ -389,8 +360,6 @@ export type MockState = {
   bookings: Booking[];
   bookingItems: BookingItem[];
   availabilityBlocks: AvailabilityBlock[];
-  payments: Payment[];
-  paymentEvents: PaymentEvent[];
   notifications: Notification[];
   adminUsers: AdminUser[];
   auditLogs: AuditLog[];

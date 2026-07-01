@@ -33,7 +33,6 @@ function AdminSettingsRoute() {
   const [defaultExtraHourPercent, setDefaultExtraHourPercent] = useState(20);
   const [bookingLeadTimeHours, setBookingLeadTimeHours] = useState(24);
   const [requestExpirationDays, setRequestExpirationDays] = useState(7);
-  const [paymentLinkExpirationHours, setPaymentLinkExpirationHours] = useState(48);
   const updateSettings = useMutation(trpc.admin.settings.update.mutationOptions({ onSuccess: () => {
     toast.success("Ustawienia biznesowe zapisane.");
     void queryClient.invalidateQueries();
@@ -59,7 +58,6 @@ function AdminSettingsRoute() {
     setDefaultExtraHourPercent(data.defaultExtraHourPercent);
     setBookingLeadTimeHours(data.bookingLeadTimeHours);
     setRequestExpirationDays(data.requestExpirationDays);
-    setPaymentLinkExpirationHours(data.paymentLinkExpirationHours);
   }, [settings.data]);
 
   return (
@@ -90,7 +88,7 @@ function AdminSettingsRoute() {
         <Card>
           <CardHeader>
             <CardTitle>Domyślne reguły rezerwacji</CardTitle>
-            <CardDescription>Wartości używane przez mock wyceny i linki płatności.</CardDescription>
+            <CardDescription>Wartości używane przez mock wyceny i ręczne potwierdzenie rezerwacji.</CardDescription>
           </CardHeader>
           <CardContent>
             <FieldGroup>
@@ -99,11 +97,10 @@ function AdminSettingsRoute() {
                 <Field><FieldLabel>Extra godzina (%)</FieldLabel><Input type="number" value={defaultExtraHourPercent} onChange={(event) => setDefaultExtraHourPercent(Number(event.target.value))} /></Field>
                 <Field><FieldLabel>Lead time (h)</FieldLabel><Input type="number" value={bookingLeadTimeHours} onChange={(event) => setBookingLeadTimeHours(Number(event.target.value))} /></Field>
                 <Field><FieldLabel>Ważność zapytania (dni)</FieldLabel><Input type="number" value={requestExpirationDays} onChange={(event) => setRequestExpirationDays(Number(event.target.value))} /></Field>
-                <Field><FieldLabel>Ważność linku (h)</FieldLabel><Input type="number" value={paymentLinkExpirationHours} onChange={(event) => setPaymentLinkExpirationHours(Number(event.target.value))} /></Field>
               </div>
               <Button
                 disabled={updateSettings.isPending}
-                onClick={() => updateSettings.mutate({ businessName, publicPhone, publicEmail, serviceAreaDescription, defaultBaseHours, defaultExtraHourPercent, bookingLeadTimeHours, requestExpirationDays, paymentLinkExpirationHours })}
+                onClick={() => updateSettings.mutate({ businessName, publicPhone, publicEmail, serviceAreaDescription, defaultBaseHours, defaultExtraHourPercent, bookingLeadTimeHours, requestExpirationDays })}
               >
                 <Save data-icon="inline-start" />
                 Zapisz ustawienia

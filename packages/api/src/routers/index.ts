@@ -3,7 +3,7 @@ import { adminRouter } from "./admin";
 import { availabilityRouter } from "./availability";
 import { catalogRouter } from "./catalog";
 import { contactRouter } from "./contact";
-import { paymentsRouter } from "./payments";
+import { ordersRouter } from "./orders";
 import { quotesRouter } from "./quotes";
 import { rentalRequestsRouter } from "./rental-requests";
 import { todoRouter } from "./todo";
@@ -20,10 +20,10 @@ export const appRouter = router({
   }),
   catalog: catalogRouter,
   availability: availabilityRouter,
+  orders: ordersRouter,
   quotes: quotesRouter,
   rentalRequests: rentalRequestsRouter,
   contact: contactRouter,
-  payments: paymentsRouter,
   admin: adminRouter,
   todo: todoRouter,
 });
