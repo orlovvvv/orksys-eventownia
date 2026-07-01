@@ -158,7 +158,9 @@ function normalizeBooking(idOrToken: string) {
 }
 
 function normalizeOrder(idOrToken: string) {
-  return normalizeRequest(idOrToken) ?? normalizeBooking(idOrToken);
+  const request = rentalRequestDetail(idOrToken);
+  if (request?.status === "confirmed" && request.booking) return normalizeBooking(request.booking.id);
+  return (request ? normalizeRequest(request.id) : null) ?? normalizeBooking(idOrToken);
 }
 
 function listNormalizedOrders() {
@@ -176,6 +178,10 @@ function findBooking(id: string) {
   return getState().bookings.find((item) => item.id === id || item.publicToken === id) ?? null;
 }
 
+function findBookingForRequest(requestId: string) {
+  return getState().bookings.find((item) => item.rentalRequestId === requestId) ?? null;
+}
+
 export const ordersRouter = router({
   preview: publicProcedure.input(orderPreviewInput).query(({ input }) => previewOrder(input)),
 
@@ -190,6 +196,7 @@ export const ordersRouter = router({
           termsAccepted: z.boolean(),
           marketingAccepted: z.boolean().optional(),
         }),
+        turnstileToken: z.string().min(1),
         message: z.string().optional(),
       }),
     )
@@ -311,11 +318,18 @@ export const ordersRouter = router({
     .input(z.object({ publicToken: z.string(), reason: z.string().optional() }))
     .mutation(({ input }) => {
       const request = findPendingRequest(input.publicToken);
-      if (request) {
+      if (request?.status === "pending_admin_review") {
         request.status = "cancelled";
         request.adminNotes = input.reason ?? "Customer cancellation requested from public status page.";
         request.updatedAt = nowIso();
         return normalizeRequest(request.id);
+      }
+      if (request) {
+        const linkedBooking = findBookingForRequest(request.id);
+        if (linkedBooking) {
+          cancelBooking(linkedBooking.id, input.reason ?? "Customer cancellation requested.", "customer");
+          return normalizeBooking(linkedBooking.id);
+        }
       }
       const booking = findBooking(input.publicToken);
       if (booking) {

@@ -386,6 +386,7 @@ function buildSubmitPayload(value: OrderFormValues, orderItems: Array<{ productI
       termsAccepted: value.consents.termsAccepted,
       marketingAccepted: value.consents.marketingAccepted,
     },
+    turnstileToken: "mock-turnstile-token",
     message: [value.customer.message.trim(), value.event.durationOption === "custom" ? "Niestandardowy czas wynajmu do ustalenia." : ""]
       .filter(Boolean)
       .join("\n"),
