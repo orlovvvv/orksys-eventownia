@@ -2,11 +2,7 @@ import { addHoursIso, addMinutesIso, dateTimeIso } from "./ids";
 import { findProductBySkuOrId, getState } from "./store";
 
 const blockingStatuses = new Set([
-  "confirmed_unpaid",
-  "payment_pending",
-  "confirmed_deposit_paid",
-  "confirmed_paid",
-  "confirmed_cash_or_bank_transfer",
+  "confirmed",
   "in_progress",
 ]);
 

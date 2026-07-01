@@ -15,7 +15,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
   CalendarDays,
-  CreditCard,
   Gauge,
   Grid2X2,
   History,
@@ -26,7 +25,6 @@ import {
   Settings,
   SlidersHorizontal,
   Tag,
-  WalletCards,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -54,8 +52,7 @@ const adminSections = [
     label: "Główne",
     links: [
       { to: "/admin", label: "Pulpit", icon: Gauge },
-      { to: "/admin/requests", label: "Zapytania", icon: WalletCards },
-      { to: "/admin/bookings", label: "Rezerwacje", icon: CalendarDays },
+      { to: "/admin/orders", label: "Zamówienia", icon: CalendarDays },
       { to: "/admin/calendar", label: "Kalendarz", icon: Grid2X2 },
     ],
   },
@@ -65,7 +62,6 @@ const adminSections = [
       { to: "/admin/products", label: "Produkty", icon: Package },
       { to: "/admin/pricing", label: "Cennik", icon: Tag },
       { to: "/admin/availability", label: "Dostępność", icon: SlidersHorizontal },
-      { to: "/admin/payments", label: "Płatności", icon: CreditCard },
     ],
   },
   {

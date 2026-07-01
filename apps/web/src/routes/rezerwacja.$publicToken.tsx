@@ -8,7 +8,7 @@ import { useState } from "react";
 
 import { Money } from "@/components/money";
 import { StatusBadge } from "@/components/status-badge";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { queryClient, trpc } from "@/utils/trpc";
 
 export const Route = createFileRoute("/rezerwacja/$publicToken")({
@@ -18,9 +18,9 @@ export const Route = createFileRoute("/rezerwacja/$publicToken")({
 function PublicStatusRoute() {
   const { publicToken } = Route.useParams();
   const [reason, setReason] = useState("Proszę o kontakt w sprawie anulowania.");
-  const status = useQuery(trpc.rentalRequests.byPublicToken.queryOptions({ publicToken }));
+  const status = useQuery(trpc.orders.byPublicToken.queryOptions({ publicToken }));
   const cancelMutation = useMutation(
-    trpc.rentalRequests.cancelRequest.mutationOptions({
+    trpc.orders.cancelRequest.mutationOptions({
       onSuccess: () => queryClient.invalidateQueries(),
     }),
   );
@@ -29,8 +29,8 @@ function PublicStatusRoute() {
     return <main className="mx-auto w-full max-w-page px-4 py-10 md:px-6">Nie znaleziono statusu dla tokenu.</main>;
   }
 
-  const data = status.data.data;
-  const isBooking = status.data.type === "booking";
+  const data = status.data;
+  const isBooking = status.data.kind === "booking";
 
   return (
     <main className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-10 md:px-6">
@@ -41,7 +41,7 @@ function PublicStatusRoute() {
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-3xl">
-            {isBooking ? "Rezerwacja" : "Zapytanie"} <StatusBadge status={data.status} />
+            {isBooking ? "Rezerwacja" : "Zamówienie do potwierdzenia"} <StatusBadge status={data.status} />
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-5 text-base md:grid-cols-2">
@@ -55,7 +55,7 @@ function PublicStatusRoute() {
             <div>{data.location?.city}, {data.location?.postalCode}</div>
             <div className="text-sm text-muted-foreground">{data.location?.street}</div>
           </div>
-          {"eventStartAt" in data ? (
+          {isBooking ? (
             <>
               <div>
                 <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Start</div>
@@ -65,19 +65,40 @@ function PublicStatusRoute() {
                 <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Razem</div>
                 <Money amountGrosz={data.totalGrosz} />
               </div>
+              <div>
+                <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Rozliczenie</div>
+                <StatusBadge status={data.manualPaymentStatus} />
+                {data.paidAmountGrosz > 0 ? <div className="mt-1 text-sm text-muted-foreground">Wpłacono: <Money amountGrosz={data.paidAmountGrosz} /></div> : null}
+              </div>
             </>
           ) : (
             <>
               <div>
                 <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Data</div>
-                <div>{data.eventDate} {data.startTime}</div>
+                <div>{formatDate(data.eventDate)} {data.startTime}</div>
               </div>
               <div>
                 <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Wstępna wycena</div>
-                <Money amountGrosz={data.totalEstimateGrosz} />
+                <Money amountGrosz={data.totalGrosz} />
               </div>
             </>
           )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Pozycje</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {data.items.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-4 rounded-xl bg-muted p-3">
+              <div>
+                <div className="font-semibold">{item.product?.namePl ?? "Pozycja"}</div>
+                <div className="text-sm text-muted-foreground">Ilość: {item.quantity}</div>
+              </div>
+              <Money amountGrosz={item.lineTotalGrosz} />
+            </div>
+          ))}
         </CardContent>
       </Card>
       <Card>

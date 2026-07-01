@@ -8,7 +8,6 @@ import type {
   FeatureFlag,
   LegalDocument,
   MockState,
-  Payment,
   PriceRule,
   Product,
   ProductAsset,
@@ -108,7 +107,7 @@ const products: Product[] = productInput.map(
     slug,
     namePl,
     shortDescriptionPl,
-    longDescriptionPl: `${shortDescriptionPl} Dostępność, powierzchnia montażu, dojazd oraz obsługa są potwierdzane ręcznie przed rezerwacją.`,
+    longDescriptionPl: `${shortDescriptionPl} Dostępność, dojazd oraz obsługa są potwierdzane ręcznie przed rezerwacją.`,
     supplierUrl: `internal://${sku.toLowerCase()}`,
     productType,
     active: true,
@@ -215,7 +214,7 @@ const bookings: Booking[] = [
     id: "book_demo_paid",
     rentalRequestId: null,
     publicToken: "btok_demo_paid_status",
-    status: "confirmed_deposit_paid",
+    status: "confirmed",
     customerId: "cust_demo_company",
     locationId: "loc_demo_company",
     eventStartAt: "2026-06-20T10:00:00.000Z",
@@ -228,7 +227,12 @@ const bookings: Booking[] = [
     travelFeeGrosz: 12000,
     discountGrosz: 0,
     totalGrosz: 112000,
+    manualPaymentStatus: "deposit_paid",
     depositRequiredGrosz: 30000,
+    paidAmountGrosz: 30000,
+    paymentNotes: "Zaliczka zaksięgowana ręcznie.",
+    paymentUpdatedAt: "2026-06-01T11:30:00.000Z",
+    paymentUpdatedByAdminId: "admin_mock_owner",
     confirmedAt: "2026-06-01T11:00:00.000Z",
     expiresAt: null,
     adminNotes: "Demo: potwierdzone wydarzenie firmowe.",
@@ -254,29 +258,7 @@ const bookingItems: BookingItem[] = [
   },
 ];
 
-const payments: Payment[] = [
-  {
-    id: "pay_demo_paid",
-    bookingId: "book_demo_paid",
-    provider: "stripe",
-    purpose: "deposit",
-    status: "paid",
-    amountGrosz: 30000,
-    currency: "PLN",
-    providerSessionId: "cs_mock_paid",
-    providerPaymentIntentId: "pi_mock_paid",
-    checkoutUrl: "https://checkout.stripe.com/mock/cs_mock_paid",
-    expiresAt: null,
-    paidAt: "2026-06-01T11:30:00.000Z",
-    refundedAt: null,
-    createdAt,
-    updatedAt: createdAt,
-  },
-];
-
 const featureFlagTuples = [
-  ["online_payments_enabled", false, "Enable online checkout links"],
-  ["deposit_required_enabled", false, "Require deposit after admin confirmation"],
   ["instant_booking_enabled", false, "Allow customers to book without admin review"],
   ["manual_travel_quote_enabled", true, "Admin confirms travel fee manually"],
   ["auto_travel_quote_enabled", false, "Enable distance/zone travel calculation"],
@@ -351,7 +333,6 @@ const businessSettings: BusinessSettings = {
   defaultTeardownMinutes: 45,
   requireAdminConfirmation: true,
   requestExpirationDays: 7,
-  paymentLinkExpirationHours: 48,
 };
 
 export function createInitialState(): MockState {
@@ -394,8 +375,6 @@ export function createInitialState(): MockState {
     bookings: structuredClone(bookings),
     bookingItems: structuredClone(bookingItems),
     availabilityBlocks: structuredClone(availabilityBlocks),
-    payments: structuredClone(payments),
-    paymentEvents: [],
     notifications: [],
     adminUsers: structuredClone(adminUsers),
     auditLogs: [],

@@ -8,21 +8,16 @@ const statusLabels: Record<string, string> = {
   declined: "Odrzucone",
   cancelled: "Anulowane",
   expired: "Wygasłe",
-  confirmed_unpaid: "Bez wpłaty",
-  payment_pending: "Płatność oczekuje",
-  confirmed_deposit_paid: "Zaliczka opłacona",
-  confirmed_paid: "Opłacone",
-  confirmed_cash_or_bank_transfer: "Gotówka/przelew",
   in_progress: "W realizacji",
   completed: "Zakończone",
   cancelled_by_customer: "Anulowane przez klienta",
   cancelled_by_operator: "Anulowane przez operatora",
   not_required: "Nie wymaga",
-  checkout_created: "Link utworzony",
-  pending: "Oczekuje",
+  unpaid: "Nieopłacone",
+  deposit_paid: "Zaliczka opłacona",
   paid: "Opłacone",
-  failed: "Błąd",
-  refunded: "Zwrócone",
+  available: "Dostępne",
+  blocked: "Zajęte",
   sent: "Wysłane",
   manual: "Ręcznie",
   maintenance: "Serwis",
@@ -31,18 +26,15 @@ const statusLabels: Record<string, string> = {
   deposit: "Zaliczka",
   full_payment: "Całość",
   refund: "Zwrot",
-  stripe: "Stripe",
-  przelewy24: "Przelewy24",
   bank_transfer: "Przelew",
   cash: "Gotówka",
 };
 
 const positiveStatuses = new Set([
   "active",
+  "available",
   "confirmed",
-  "confirmed_deposit_paid",
-  "confirmed_paid",
-  "confirmed_cash_or_bank_transfer",
+  "deposit_paid",
   "paid",
   "completed",
   "sent",
@@ -51,22 +43,18 @@ const positiveStatuses = new Set([
 
 const destructiveStatuses = new Set([
   "inactive",
+  "blocked",
   "declined",
   "cancelled",
   "cancelled_by_customer",
   "cancelled_by_operator",
-  "failed",
   "expired",
-  "refunded",
   "blackout",
 ]);
 
 const warningStatuses = new Set([
   "pending_admin_review",
-  "confirmed_unpaid",
-  "payment_pending",
-  "checkout_created",
-  "pending",
+  "unpaid",
   "maintenance",
   "manual",
 ]);
@@ -111,7 +99,7 @@ export function itemSummary(items: Array<{ product?: { namePl: string } | null; 
 }
 
 export function isUnpaidBooking(status: string | null | undefined) {
-  return status === "confirmed_unpaid" || status === "payment_pending";
+  return status === "unpaid" || status === "deposit_paid";
 }
 
 export function isActiveOrUpcomingDate(value: string | null | undefined) {

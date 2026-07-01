@@ -13,7 +13,7 @@ export type QuoteInput = {
   items: { sku: string; quantity: number }[];
 };
 
-export function calculateQuote(input: QuoteInput): Quote {
+export function calculateQuote(input: QuoteInput, options: { persist?: boolean } = {}): Quote {
   const state = getState();
   const lines: QuoteLine[] = input.items.map((item) => {
     const product = findProductBySkuOrId(item.sku);
@@ -94,7 +94,9 @@ export function calculateQuote(input: QuoteInput): Quote {
     createdAt: nowIso(),
   };
 
-  state.quotes.unshift(quote);
-  recordAnalytics("quote_calculated", "quote", quote.id, { itemCount: input.items.length });
+  if (options.persist ?? true) {
+    state.quotes.unshift(quote);
+    recordAnalytics("quote_calculated", "quote", quote.id, { itemCount: input.items.length });
+  }
   return quote;
 }

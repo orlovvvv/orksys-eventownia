@@ -10,7 +10,6 @@ import {
 } from "../mock/eventownia/booking";
 import { addHoursIso, dateTimeIso, makeId, makePublicToken, nowIso } from "../mock/eventownia/ids";
 import { createNotification, resendNotification } from "../mock/eventownia/notifications";
-import { createCheckoutSession, refundPayment, setPaymentStatus } from "../mock/eventownia/payments";
 import {
   bookingDetail,
   findPriceRule,
@@ -20,6 +19,7 @@ import {
   rentalRequestDetail,
 } from "../mock/eventownia/store";
 import type { AvailabilityBlock, Booking, PriceRule, Product, ProductAsset } from "../mock/eventownia/types";
+import { adminOrdersRouter } from "./orders";
 
 const productInput = z.object({
   categoryId: z.string().optional(),
@@ -41,6 +41,8 @@ const productInput = z.object({
 });
 
 export const adminRouter = router({
+  orders: adminOrdersRouter,
+
   dashboard: router({
     summary: publicProcedure.query(() => {
       const state = getState();
@@ -49,7 +51,7 @@ export const adminRouter = router({
         cards: {
           pendingRequests: state.rentalRequests.filter((item) => item.status === "pending_admin_review").length,
           upcomingBookings: state.bookings.filter((item) => new Date(item.eventStartAt) >= new Date()).length,
-          awaitingPayment: state.bookings.filter((item) => item.status === "payment_pending" || item.status === "confirmed_unpaid").length,
+          awaitingPayment: state.bookings.filter((item) => item.manualPaymentStatus === "unpaid").length,
           missingPhotos: state.products.filter((product) => !state.productAssets.some((asset) => asset.productId === product.id)).length,
           inactiveProducts: state.products.filter((product) => !product.active).length,
           notifications: state.notifications.length,
@@ -274,14 +276,10 @@ export const adminRouter = router({
       appendAuditLog("rental_request.quote_adjustment", "rental_request", request.id, before, request);
       return rentalRequestDetail(request.id);
     }),
-    confirm: publicProcedure.input(z.object({ id: z.string(), travelFeeGrosz: z.number().int().min(0), depositRequiredGrosz: z.number().int().min(0), adminNotes: z.string().optional(), sendPaymentLink: z.boolean().optional() })).mutation(({ input }) => {
+    confirm: publicProcedure.input(z.object({ id: z.string(), travelFeeGrosz: z.number().int().min(0), depositRequiredGrosz: z.number().int().min(0), adminNotes: z.string().optional() })).mutation(({ input }) => {
       const booking = confirmRentalRequest(input.id, input);
       if (!booking) return null;
-      let payment = null;
-      if (input.sendPaymentLink && input.depositRequiredGrosz > 0) {
-        payment = createCheckoutSession(booking.id, input.depositRequiredGrosz, "deposit");
-      }
-      appendAuditLog("rental_request.confirm", "rental_request", input.id, null, { booking, payment });
+      appendAuditLog("rental_request.confirm", "rental_request", input.id, null, { booking });
       return bookingDetail(booking.id);
     }),
     decline: publicProcedure.input(z.object({ id: z.string(), reason: z.string() })).mutation(({ input }) => {
@@ -313,7 +311,7 @@ export const adminRouter = router({
       const location = { id: makeId("loc"), customerId: customer.id, label: "Rezerwacja ręczna", street: "Adres do uzupełnienia", postalCode: "00-000", city: "Do potwierdzenia", country: "PL" as const, surfaceType: null, powerAvailable: null, accessNotes: null, createdAt: now, updatedAt: now };
       const eventStartAt = dateTimeIso(input.date, input.startTime);
       const eventEndAt = addHoursIso(eventStartAt, input.durationHours);
-      const booking: Booking = { id: makeId("book"), rentalRequestId: null, publicToken: makePublicToken("btok"), status: "confirmed_unpaid", customerId: customer.id, locationId: location.id, eventStartAt, eventEndAt, setupStartAt: eventStartAt, teardownEndAt: eventEndAt, durationHours: input.durationHours, currency: "PLN", subtotalGrosz: input.totalGrosz, travelFeeGrosz: 0, discountGrosz: 0, totalGrosz: input.totalGrosz, depositRequiredGrosz: 0, confirmedAt: now, expiresAt: null, adminNotes: "Manual/offline booking.", customerNotes: null, createdByAdminId: getMockAdmin()?.id ?? null, generatedContractId: null, createdAt: now, updatedAt: now };
+      const booking: Booking = { id: makeId("book"), rentalRequestId: null, publicToken: makePublicToken("btok"), status: "confirmed", customerId: customer.id, locationId: location.id, eventStartAt, eventEndAt, setupStartAt: eventStartAt, teardownEndAt: eventEndAt, durationHours: input.durationHours, currency: "PLN", subtotalGrosz: input.totalGrosz, travelFeeGrosz: 0, discountGrosz: 0, totalGrosz: input.totalGrosz, manualPaymentStatus: "unpaid", depositRequiredGrosz: 0, paidAmountGrosz: 0, paymentNotes: null, paymentUpdatedAt: null, paymentUpdatedByAdminId: null, confirmedAt: now, expiresAt: null, adminNotes: "Manual/offline booking.", customerNotes: null, createdByAdminId: getMockAdmin()?.id ?? null, generatedContractId: null, createdAt: now, updatedAt: now };
       state.customers.unshift(customer);
       state.locations.unshift(location);
       state.bookings.unshift(booking);
@@ -335,7 +333,7 @@ export const adminRouter = router({
       const booking = getState().bookings.find((item) => item.id === input.id);
       if (!booking) return null;
       const before = { ...booking };
-      booking.status = "confirmed_unpaid";
+      booking.status = "confirmed";
       booking.confirmedAt = booking.confirmedAt ?? nowIso();
       booking.updatedAt = nowIso();
       appendAuditLog("booking.confirm", "booking", booking.id, before, booking);
@@ -352,11 +350,6 @@ export const adminRouter = router({
       const booking = completeBooking(input.id);
       appendAuditLog("booking.complete", "booking", input.id, before, booking);
       return booking ? bookingDetail(booking.id) : null;
-    }),
-    createPaymentLink: publicProcedure.input(z.object({ id: z.string(), amountGrosz: z.number().int().min(1) })).mutation(({ input }) => {
-      const payment = createCheckoutSession(input.id, input.amountGrosz, "deposit");
-      appendAuditLog("booking.payment_link", "booking", input.id, null, payment);
-      return payment;
     }),
     sendConfirmation: publicProcedure.input(z.object({ id: z.string() })).mutation(({ input }) => {
       const detail = bookingDetail(input.id);
@@ -434,21 +427,6 @@ export const adminRouter = router({
       customer.updatedAt = customer.anonymizedAt;
       appendAuditLog("customer.anonymize", "customer", customer.id, before, customer);
       return customer;
-    }),
-  }),
-
-  payments: router({
-    list: publicProcedure.query(() => getState().payments.map((payment) => ({ ...payment, booking: bookingDetail(payment.bookingId) }))),
-    detail: publicProcedure.input(z.object({ id: z.string() })).query(({ input }) => getState().payments.find((item) => item.id === input.id) ?? null),
-    markBankTransferPaid: publicProcedure.input(z.object({ id: z.string() })).mutation(({ input }) => {
-      const payment = setPaymentStatus(input.id, "paid");
-      appendAuditLog("payment.mark_bank_transfer_paid", "payment", input.id, null, payment);
-      return payment;
-    }),
-    refund: publicProcedure.input(z.object({ id: z.string() })).mutation(({ input }) => {
-      const payment = refundPayment(input.id);
-      appendAuditLog("payment.refund", "payment", input.id, null, payment);
-      return payment;
     }),
   }),
 

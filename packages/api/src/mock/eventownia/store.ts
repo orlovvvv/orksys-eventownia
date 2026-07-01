@@ -84,8 +84,7 @@ export function bookingDetail(idOrToken: string) {
       ...item,
       product: publicProduct(item.productId),
     }));
-  const payments = state.payments.filter((item) => item.bookingId === booking.id);
   const notifications = state.notifications.filter((item) => item.bookingId === booking.id);
   const generatedDocuments = state.generatedDocuments.filter((item) => item.bookingId === booking.id);
-  return { ...booking, customer, location, items, payments, notifications, generatedDocuments };
+  return { ...booking, customer, location, items, notifications, generatedDocuments };
 }

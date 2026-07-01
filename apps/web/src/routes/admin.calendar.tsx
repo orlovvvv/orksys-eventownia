@@ -64,7 +64,7 @@ function AdminCalendarRoute() {
     <AdminShell
       title="Kalendarz rezerwacji"
       description="Miesięczny widok realizacji, blokad i prac serwisowych."
-      actions={[{ label: "Nowa rezerwacja", icon: Plus, to: "/admin/bookings" }]}
+      actions={[{ label: "Zamówienia", icon: Plus, to: "/admin/orders" }]}
     >
       <div className="grid gap-5 xl:grid-cols-[280px_1fr]">
         <Card className="xl:sticky xl:top-20 xl:self-start">
@@ -94,8 +94,8 @@ function AdminCalendarRoute() {
             <div className="flex flex-col gap-2">
               <div className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Status</div>
               <Button variant={statusFilter === "all" ? "secondary" : "outline"} size="sm" onClick={() => setStatusFilter("all")}>Wszystkie</Button>
-              <Button variant={statusFilter === "confirmed_deposit_paid" ? "secondary" : "outline"} size="sm" onClick={() => setStatusFilter("confirmed_deposit_paid")}>Zaliczka</Button>
-              <Button variant={statusFilter === "confirmed_unpaid" ? "secondary" : "outline"} size="sm" onClick={() => setStatusFilter("confirmed_unpaid")}>Bez wpłaty</Button>
+              <Button variant={statusFilter === "confirmed" ? "secondary" : "outline"} size="sm" onClick={() => setStatusFilter("confirmed")}>Potwierdzone</Button>
+              <Button variant={statusFilter === "completed" ? "secondary" : "outline"} size="sm" onClick={() => setStatusFilter("completed")}>Zakończone</Button>
             </div>
             <label className="flex items-center gap-3 rounded-xl bg-muted p-3 text-sm">
               <Checkbox checked={showBlocks} onCheckedChange={(checked) => setShowBlocks(checked === true)} />
@@ -193,7 +193,7 @@ function AdminCalendarRoute() {
                 </div>
               ) : null}
               {selectedBookings.map((booking) => (
-                <Link key={booking.id} to="/admin/bookings/$id" params={{ id: booking.id }} className="rounded-xl border border-border/60 p-4 transition-colors hover:bg-muted/50">
+                <Link key={booking.id} to="/admin/orders/$id" params={{ id: booking.id }} className="rounded-xl border border-border/60 p-4 transition-colors hover:bg-muted/50">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="font-semibold">{booking.customer?.name ?? "Rezerwacja"}</div>
