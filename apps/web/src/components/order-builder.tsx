@@ -768,7 +768,7 @@ function EventAvailabilityFeedback({
       <Alert>
         <CheckCircle2 data-icon="inline-start" />
         <AlertTitle>Wybrane produkty wyglądają dostępnie</AlertTitle>
-        <AlertDescription>Obsługa potwierdzi zamówienie ręcznie po wysłaniu formularza.</AlertDescription>
+        <AlertDescription>Obsługa potwierdzi zapytanie ręcznie po wysłaniu formularza.</AlertDescription>
       </Alert>
     );
   }
@@ -782,7 +782,7 @@ function EventAvailabilityFeedback({
             <div key={item.productId} className="rounded-lg bg-background/70 p-3 text-sm">
               <div className="font-medium">{item.name}</div>
               <div>
-                Zamówiono {item.requestedQuantity}, dostępne {item.availableQuantity}.
+                Wybrano {item.requestedQuantity}, dostępne {item.availableQuantity}.
               </div>
               {item.conflictReasons[0] ? <div>{item.conflictReasons[0]}</div> : null}
             </div>
@@ -812,7 +812,7 @@ function CustomerSection({ form }: { form: OrderFormApi }) {
     <Card>
       <CardHeader>
         <CardTitle>Klient</CardTitle>
-        <CardDescription>Dane potrzebne do ręcznego potwierdzenia zamówienia.</CardDescription>
+        <CardDescription>Dane potrzebne do ręcznego potwierdzenia zapytania.</CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
@@ -957,7 +957,7 @@ function SubmitOrderPanel({
   previewPending: boolean;
   submitPending: boolean;
 }) {
-  const submitLabel = submitPending ? "Wysyłamy zamówienie" : "Wyślij zamówienie do potwierdzenia";
+  const submitLabel = submitPending ? "Wysyłamy zapytanie" : "Wyślij zapytanie";
 
   return (
     <div className="flex flex-col gap-4 self-start xl:sticky xl:top-28">

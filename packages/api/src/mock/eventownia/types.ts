@@ -121,6 +121,8 @@ export type ProductPricing = {
   depositMode: "none" | "fixed" | "percent";
   depositAmountZloty: number | null;
   depositPercent: number | null;
+  priceUpdatedAt: string;
+  priceSetUpdatedAt: string;
 };
 
 export type PublicProduct = Product & {

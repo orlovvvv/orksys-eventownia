@@ -1,5 +1,4 @@
 import { Button } from "@orksys-eventownia/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@orksys-eventownia/ui/components/card";
 import { Field, FieldGroup, FieldLabel } from "@orksys-eventownia/ui/components/field";
 import { Input } from "@orksys-eventownia/ui/components/input";
 import { Switch } from "@orksys-eventownia/ui/components/switch";
@@ -10,7 +9,15 @@ import { Bell, FileText, Save, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { AdminKpiCard } from "@/components/admin-kpi-card";
+import { AdminEmptyState } from "@/components/admin-empty-state";
+import { AdminMetricStrip } from "@/components/admin-metric-strip";
+import {
+  AdminSection,
+  AdminSectionContent,
+  AdminSectionDescription,
+  AdminSectionHeader,
+  AdminSectionTitle,
+} from "@/components/admin-section";
 import { AdminShell } from "@/components/admin-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { notificationMetrics } from "@/lib/admin-metrics";
@@ -57,20 +64,25 @@ function AdminSettingsRoute() {
   }, [settings.data]);
 
   return (
-    <AdminShell title="Ustawienia" description="Podstawowe dane firmy, domyślne reguły obsługi i systemowe przełączniki mock.">
-      <div className="grid gap-4 md:grid-cols-3">
-        <AdminKpiCard label="Flagi funkcji" value={flags.data?.filter((flag) => flag.enabled).length ?? 0} detail="Włączone" icon={Settings2} tone="primary" />
-        <AdminKpiCard label="Powiadomienia" value={notifications.data?.length ?? 0} detail={`${notificationStats.failedCount} błędów`} icon={Bell} tone={notificationStats.failedCount ? "danger" : "neutral"} />
-        <AdminKpiCard label="Dokumenty" value={settings.data?.legalDocuments.filter((doc) => doc.active).length ?? 0} detail="Aktywne wersje" icon={FileText} tone="neutral" />
-      </div>
+    <AdminShell title="Ustawienia" description="Dane firmy, domyślne reguły obsługi i systemowe przełączniki mock.">
+      <AdminMetricStrip
+        metrics={[
+          { label: "Flagi funkcji", value: flags.data?.filter((flag) => flag.enabled).length ?? 0, detail: "Włączone", icon: Settings2, tone: "primary" },
+          { label: "Powiadomienia", value: notifications.data?.length ?? 0, detail: `${notificationStats.failedCount} błędów`, icon: Bell, tone: notificationStats.failedCount ? "danger" : "neutral" },
+          { label: "Dokumenty", value: settings.data?.legalDocuments.filter((doc) => doc.active).length ?? 0, detail: "Aktywne wersje", icon: FileText },
+        ]}
+        className="xl:grid-cols-3"
+      />
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profil biznesowy</CardTitle>
-            <CardDescription>Dane widoczne w panelu i publicznych miejscach kontaktu.</CardDescription>
-          </CardHeader>
-          <CardContent>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <AdminSection>
+          <AdminSectionHeader>
+            <div>
+              <AdminSectionTitle>Profil biznesowy</AdminSectionTitle>
+              <AdminSectionDescription>Dane widoczne w panelu i publicznych miejscach kontaktu.</AdminSectionDescription>
+            </div>
+          </AdminSectionHeader>
+          <AdminSectionContent>
             <FieldGroup>
               <Field><FieldLabel>Nazwa firmy</FieldLabel><Input value={businessName} onChange={(event) => setBusinessName(event.target.value)} /></Field>
               <div className="grid gap-4 md:grid-cols-2">
@@ -79,14 +91,17 @@ function AdminSettingsRoute() {
               </div>
               <Field><FieldLabel>Obszar działania</FieldLabel><Input value={serviceAreaDescription} onChange={(event) => setServiceAreaDescription(event.target.value)} /></Field>
             </FieldGroup>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Domyślne reguły rezerwacji</CardTitle>
-            <CardDescription>Wartości używane przez mock wyceny i ręczne potwierdzenie rezerwacji.</CardDescription>
-          </CardHeader>
-          <CardContent>
+          </AdminSectionContent>
+        </AdminSection>
+
+        <AdminSection>
+          <AdminSectionHeader>
+            <div>
+              <AdminSectionTitle>Domyślne reguły rezerwacji</AdminSectionTitle>
+              <AdminSectionDescription>Wartości używane przez mock wyceny i ręczne potwierdzenie rezerwacji.</AdminSectionDescription>
+            </div>
+          </AdminSectionHeader>
+          <AdminSectionContent>
             <FieldGroup>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field><FieldLabel>Lead time (h)</FieldLabel><Input type="number" value={bookingLeadTimeHours} onChange={(event) => setBookingLeadTimeHours(Number(event.target.value))} /></Field>
@@ -100,19 +115,21 @@ function AdminSettingsRoute() {
                 Zapisz ustawienia
               </Button>
             </FieldGroup>
-          </CardContent>
-        </Card>
+          </AdminSectionContent>
+        </AdminSection>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_420px]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Feature flags</CardTitle>
-            <CardDescription>Przełączniki demonstracyjne dla funkcji aplikacji.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
+        <AdminSection>
+          <AdminSectionHeader>
+            <div>
+              <AdminSectionTitle>Feature flags</AdminSectionTitle>
+              <AdminSectionDescription>Przełączniki demonstracyjne dla funkcji aplikacji.</AdminSectionDescription>
+            </div>
+          </AdminSectionHeader>
+          <AdminSectionContent className="grid gap-2 md:grid-cols-2">
             {flags.data?.map((flag) => (
-              <label key={flag.key} className="flex items-center justify-between gap-3 rounded-xl bg-muted p-4 text-sm">
+              <label key={flag.key} className="flex items-center justify-between gap-3 rounded-lg border border-border/70 p-3 text-sm">
                 <span className="min-w-0">
                   <strong className="block truncate">{flag.key}</strong>
                   <span className="text-xs text-muted-foreground">{flag.description}</span>
@@ -120,17 +137,19 @@ function AdminSettingsRoute() {
                 <Switch checked={flag.enabled} disabled={updateFlag.isPending} onCheckedChange={(checked) => updateFlag.mutate({ key: flag.key, enabled: checked })} />
               </label>
             ))}
-          </CardContent>
-        </Card>
+          </AdminSectionContent>
+        </AdminSection>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Dokumenty prawne</CardTitle>
-            <CardDescription>Aktywne wersje treści legalnych w mock state.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+        <AdminSection>
+          <AdminSectionHeader>
+            <div>
+              <AdminSectionTitle>Dokumenty prawne</AdminSectionTitle>
+              <AdminSectionDescription>Aktywne wersje treści legalnych w mock state.</AdminSectionDescription>
+            </div>
+          </AdminSectionHeader>
+          <AdminSectionContent className="flex flex-col gap-2">
             {settings.data?.legalDocuments.map((document) => (
-              <div key={document.id} className="rounded-xl bg-muted p-4">
+              <div key={document.id} className="rounded-lg border border-border/70 p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-semibold">{document.title}</div>
                   <StatusBadge status={document.active ? "active" : "inactive"} />
@@ -138,35 +157,59 @@ function AdminSettingsRoute() {
                 <div className="mt-1 text-xs text-muted-foreground">{document.type} · {document.version} · {document.publishedAt ? formatDateTime(document.publishedAt) : "nieopublikowany"}</div>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </AdminSectionContent>
+        </AdminSection>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Powiadomienia mock</CardTitle>
-          <CardDescription>Ostatnie wiadomości e-mail/SMS i możliwość ponowienia wysyłki.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader><TableRow><TableHead>Szablon</TableHead><TableHead>Odbiorca</TableHead><TableHead>Status</TableHead><TableHead>Data</TableHead><TableHead /></TableRow></TableHeader>
-            <TableBody>
-              {notifications.data?.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">Brak powiadomień w makiecie.</TableCell></TableRow>
-              ) : null}
-              {notifications.data?.map((notification) => (
-                <TableRow key={notification.id}>
-                  <TableCell>{notification.templateKey}</TableCell>
-                  <TableCell>{notification.recipient}</TableCell>
-                  <TableCell><StatusBadge status={notification.status} /></TableCell>
-                  <TableCell>{formatDateTime(notification.createdAt)}</TableCell>
-                  <TableCell className="text-right"><Button variant="outline" size="sm" disabled={resend.isPending} onClick={() => resend.mutate({ id: notification.id })}>Wyślij ponownie</Button></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <AdminSection>
+        <AdminSectionHeader>
+          <div>
+            <AdminSectionTitle>Powiadomienia mock</AdminSectionTitle>
+            <AdminSectionDescription>Ostatnie wiadomości e-mail/SMS i możliwość ponowienia wysyłki.</AdminSectionDescription>
+          </div>
+        </AdminSectionHeader>
+        <AdminSectionContent className="p-0">
+          {notifications.data?.length === 0 ? (
+            <div className="p-4">
+              <AdminEmptyState icon={Bell} title="Brak powiadomień" description="Nie ma powiadomień w mock state." />
+            </div>
+          ) : (
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Szablon</TableHead><TableHead>Odbiorca</TableHead><TableHead>Status</TableHead><TableHead>Data</TableHead><TableHead /></TableRow></TableHeader>
+                  <TableBody>
+                    {notifications.data?.map((notification) => (
+                      <TableRow key={notification.id}>
+                        <TableCell>{notification.templateKey}</TableCell>
+                        <TableCell>{notification.recipient}</TableCell>
+                        <TableCell><StatusBadge status={notification.status} /></TableCell>
+                        <TableCell>{formatDateTime(notification.createdAt)}</TableCell>
+                        <TableCell className="text-right"><Button variant="outline" size="sm" disabled={resend.isPending} onClick={() => resend.mutate({ id: notification.id })}>Wyślij ponownie</Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="grid gap-2 p-3 md:hidden">
+                {notifications.data?.map((notification) => (
+                  <div key={notification.id} className="rounded-lg border border-border/70 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold">{notification.templateKey}</div>
+                        <div className="truncate text-xs text-muted-foreground">{notification.recipient}</div>
+                      </div>
+                      <StatusBadge status={notification.status} />
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground">{formatDateTime(notification.createdAt)}</div>
+                    <Button className="mt-3" variant="outline" size="sm" disabled={resend.isPending} onClick={() => resend.mutate({ id: notification.id })}>Wyślij ponownie</Button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </AdminSectionContent>
+      </AdminSection>
     </AdminShell>
   );
 }

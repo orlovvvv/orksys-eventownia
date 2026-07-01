@@ -49,6 +49,7 @@ export const adminRouter = router({
   dashboard: router({
     summary: publicProcedure.query(() => {
       const state = getState();
+      const publicProducts = state.products.map((product) => publicProduct(product.id));
       return {
         admin: getMockAdmin(),
         cards: {
@@ -56,6 +57,7 @@ export const adminRouter = router({
           upcomingBookings: state.bookings.filter((item) => new Date(item.eventStartAt) >= new Date()).length,
           awaitingPayment: state.bookings.filter((item) => item.manualPaymentStatus === "unpaid").length,
           missingPhotos: state.products.filter((product) => !state.productAssets.some((asset) => asset.productId === product.id)).length,
+          missingPrices: publicProducts.filter((product) => product?.pricing?.hourlyPriceZloty === null || product?.pricing?.hourlyPriceZloty === undefined).length,
           inactiveProducts: state.products.filter((product) => !product.active).length,
           notifications: state.notifications.length,
         },

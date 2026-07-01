@@ -3,9 +3,11 @@ import * as schema from "@orksys-eventownia/db/schema/auth";
 import { env } from "@orksys-eventownia/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin } from "better-auth/plugins";
 
 export function createAuth() {
   const db = createDb();
+  const secureCookies = env.BETTER_AUTH_URL.startsWith("https://");
 
   return betterAuth({
     database: drizzleAdapter(db, {
@@ -17,6 +19,11 @@ export function createAuth() {
     emailAndPassword: {
       enabled: true,
     },
+    plugins: [
+      admin({
+        adminRoles: ["admin"],
+      }),
+    ],
     // uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
     // session: {
     //   cookieCache: {
@@ -28,8 +35,8 @@ export function createAuth() {
     baseURL: env.BETTER_AUTH_URL,
     advanced: {
       defaultCookieAttributes: {
-        sameSite: "none",
-        secure: true,
+        sameSite: secureCookies ? "none" : "lax",
+        secure: secureCookies,
         httpOnly: true,
       },
       // uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain

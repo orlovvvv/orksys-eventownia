@@ -48,10 +48,12 @@ import { Route as AdminRequestsIndexRouteImport } from './routes/admin.requests.
 import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
 import { Route as AdminBookingsIndexRouteImport } from './routes/admin.bookings.index'
+import { Route as AdminAuditIndexRouteImport } from './routes/admin.audit.index'
 import { Route as AdminRequestsIdRouteImport } from './routes/admin.requests.$id'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
 import { Route as AdminBookingsIdRouteImport } from './routes/admin.bookings.$id'
+import { Route as AdminAuditIdRouteImport } from './routes/admin.audit.$id'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
@@ -252,6 +254,11 @@ const AdminBookingsIndexRoute = AdminBookingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminBookingsRoute,
 } as any)
+const AdminAuditIndexRoute = AdminAuditIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminAuditRoute,
+} as any)
 const AdminRequestsIdRoute = AdminRequestsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -271,6 +278,11 @@ const AdminBookingsIdRoute = AdminBookingsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AdminBookingsRoute,
+} as any)
+const AdminAuditIdRoute = AdminAuditIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminAuditRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -294,7 +306,7 @@ export interface FileRoutesByFullPath {
   '/products': typeof ProductsRouteWithChildren
   '/terms': typeof TermsRoute
   '/todos': typeof TodosRoute
-  '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/availability': typeof AdminAvailabilityRoute
   '/admin/bookings': typeof AdminBookingsRouteWithChildren
   '/admin/calendar': typeof AdminCalendarRoute
@@ -309,10 +321,12 @@ export interface FileRoutesByFullPath {
   '/reservation/$publicToken': typeof ReservationPublicTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
+  '/admin/audit/': typeof AdminAuditIndexRoute
   '/admin/bookings/': typeof AdminBookingsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
@@ -337,7 +351,6 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/terms': typeof TermsRoute
   '/todos': typeof TodosRoute
-  '/admin/audit': typeof AdminAuditRoute
   '/admin/availability': typeof AdminAvailabilityRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -348,10 +361,12 @@ export interface FileRoutesByTo {
   '/reservation/$publicToken': typeof ReservationPublicTokenRoute
   '/admin': typeof AdminIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
+  '/admin/audit': typeof AdminAuditIndexRoute
   '/admin/bookings': typeof AdminBookingsIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/products': typeof AdminProductsIndexRoute
@@ -379,7 +394,7 @@ export interface FileRoutesById {
   '/products': typeof ProductsRouteWithChildren
   '/terms': typeof TermsRoute
   '/todos': typeof TodosRoute
-  '/admin/audit': typeof AdminAuditRoute
+  '/admin/audit': typeof AdminAuditRouteWithChildren
   '/admin/availability': typeof AdminAvailabilityRoute
   '/admin/bookings': typeof AdminBookingsRouteWithChildren
   '/admin/calendar': typeof AdminCalendarRoute
@@ -394,10 +409,12 @@ export interface FileRoutesById {
   '/reservation/$publicToken': typeof ReservationPublicTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/admin/audit/$id': typeof AdminAuditIdRoute
   '/admin/bookings/$id': typeof AdminBookingsIdRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
   '/admin/requests/$id': typeof AdminRequestsIdRoute
+  '/admin/audit/': typeof AdminAuditIndexRoute
   '/admin/bookings/': typeof AdminBookingsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
@@ -441,10 +458,12 @@ export interface FileRouteTypes {
     | '/reservation/$publicToken'
     | '/admin/'
     | '/products/'
+    | '/admin/audit/$id'
     | '/admin/bookings/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
+    | '/admin/audit/'
     | '/admin/bookings/'
     | '/admin/orders/'
     | '/admin/products/'
@@ -469,7 +488,6 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/terms'
     | '/todos'
-    | '/admin/audit'
     | '/admin/availability'
     | '/admin/calendar'
     | '/admin/payments'
@@ -480,10 +498,12 @@ export interface FileRouteTypes {
     | '/reservation/$publicToken'
     | '/admin'
     | '/products'
+    | '/admin/audit/$id'
     | '/admin/bookings/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
+    | '/admin/audit'
     | '/admin/bookings'
     | '/admin/orders'
     | '/admin/products'
@@ -525,10 +545,12 @@ export interface FileRouteTypes {
     | '/reservation/$publicToken'
     | '/admin/'
     | '/products/'
+    | '/admin/audit/$id'
     | '/admin/bookings/$id'
     | '/admin/orders/$id'
     | '/admin/products/$id'
     | '/admin/requests/$id'
+    | '/admin/audit/'
     | '/admin/bookings/'
     | '/admin/orders/'
     | '/admin/products/'
@@ -835,6 +857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBookingsIndexRouteImport
       parentRoute: typeof AdminBookingsRoute
     }
+    '/admin/audit/': {
+      id: '/admin/audit/'
+      path: '/'
+      fullPath: '/admin/audit/'
+      preLoaderRoute: typeof AdminAuditIndexRouteImport
+      parentRoute: typeof AdminAuditRoute
+    }
     '/admin/requests/$id': {
       id: '/admin/requests/$id'
       path: '/$id'
@@ -863,8 +892,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBookingsIdRouteImport
       parentRoute: typeof AdminBookingsRoute
     }
+    '/admin/audit/$id': {
+      id: '/admin/audit/$id'
+      path: '/$id'
+      fullPath: '/admin/audit/$id'
+      preLoaderRoute: typeof AdminAuditIdRouteImport
+      parentRoute: typeof AdminAuditRoute
+    }
   }
 }
+
+interface AdminAuditRouteChildren {
+  AdminAuditIdRoute: typeof AdminAuditIdRoute
+  AdminAuditIndexRoute: typeof AdminAuditIndexRoute
+}
+
+const AdminAuditRouteChildren: AdminAuditRouteChildren = {
+  AdminAuditIdRoute: AdminAuditIdRoute,
+  AdminAuditIndexRoute: AdminAuditIndexRoute,
+}
+
+const AdminAuditRouteWithChildren = AdminAuditRoute._addFileChildren(
+  AdminAuditRouteChildren,
+)
 
 interface AdminBookingsRouteChildren {
   AdminBookingsIdRoute: typeof AdminBookingsIdRoute
@@ -923,7 +973,7 @@ const AdminRequestsRouteWithChildren = AdminRequestsRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
-  AdminAuditRoute: typeof AdminAuditRoute
+  AdminAuditRoute: typeof AdminAuditRouteWithChildren
   AdminAvailabilityRoute: typeof AdminAvailabilityRoute
   AdminBookingsRoute: typeof AdminBookingsRouteWithChildren
   AdminCalendarRoute: typeof AdminCalendarRoute
@@ -937,7 +987,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
-  AdminAuditRoute: AdminAuditRoute,
+  AdminAuditRoute: AdminAuditRouteWithChildren,
   AdminAvailabilityRoute: AdminAvailabilityRoute,
   AdminBookingsRoute: AdminBookingsRouteWithChildren,
   AdminCalendarRoute: AdminCalendarRoute,

@@ -1,24 +1,34 @@
-import { Card, CardContent } from "@orksys-eventownia/ui/components/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@orksys-eventownia/ui/components/empty";
 import type { LucideIcon } from "lucide-react";
 
 export function AdminEmptyState({
   title,
   description,
   icon: Icon,
+  action,
 }: {
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   icon: LucideIcon;
+  action?: React.ReactNode;
 }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
           <Icon />
-        </div>
-        <div className="text-base font-semibold">{title}</div>
-        {description ? <p className="max-w-md text-sm/relaxed text-muted-foreground">{description}</p> : null}
-      </CardContent>
-    </Card>
+        </EmptyMedia>
+        <EmptyTitle>{title}</EmptyTitle>
+        {description ? <EmptyDescription>{description}</EmptyDescription> : null}
+      </EmptyHeader>
+      {action ? <EmptyContent>{action}</EmptyContent> : null}
+    </Empty>
   );
 }

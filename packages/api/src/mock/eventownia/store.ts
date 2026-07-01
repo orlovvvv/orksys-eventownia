@@ -79,6 +79,8 @@ export function resolveProductPricing(productId: string): {
       depositMode: priceSet.depositMode,
       depositAmountZloty: priceSet.depositAmountZloty,
       depositPercent: priceSet.depositPercent,
+      priceUpdatedAt: price.updatedAt,
+      priceSetUpdatedAt: priceSet.updatedAt,
     }
     : null;
 
